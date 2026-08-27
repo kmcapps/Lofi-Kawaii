@@ -1,21 +1,22 @@
 # Audio credits and provenance
 
-## Track 1: Windows Down
+Both tracks below are part of the DURU-AI CC0 BGM collection. The collection
+states that all tracks are released under the CC0 1.0 public-domain dedication;
+attribution is welcome but not required. These entries preserve the source for
+future verification before distribution.
 
-- Artist: HoliznaCC0
-- Source: https://freemusicarchive.org/music/holiznacc0/lazy-summer-lofi-1/windows-downmp3/
-- License shown by source: CC0 1.0 Universal
-- Intended local filename: `public/audio/windows-down.mp3`
-- Downloaded on: not yet downloaded
+## Track 1: Roomscene Lofi
 
-CC0 does not require attribution. This record remains in the project so the
-origin and license can be checked again before any future distribution.
+- Artist / distributor: DURU-AI / uncle-sheepsky
+- License: CC0 1.0 Universal (public-domain dedication)
+- Source URL: https://github.com/uncle-sheepsky/duru-ai-cc0-bgm
+- Project filename: `public/audio/duru-roomscene-lofi.mp3`
+- Collection designation: original, `[pure]`
 
-## Track 2: Your original track
+## Track 2: AI EP2 Music
 
-- Intended local filename: `public/audio/my-lofi-track.mp3`
-- Creator: to be filled in by the creator
-- Source files / sample licenses: to be recorded before sharing the Activity
-
-Do not add a third-party sample unless its license allows inclusion in a web
-application and the required credit is recorded here.
+- Artist / distributor: DURU-AI / uncle-sheepsky
+- License: CC0 1.0 Universal (public-domain dedication)
+- Source URL: https://github.com/uncle-sheepsky/duru-ai-cc0-bgm
+- Project filename: `public/audio/duru-ai-ep2-music.mp3`
+- Collection designation: original, `[pure]`

@@ -1,4 +1,3 @@
-import { DiscordSDK } from '@discord/embedded-app-sdk';
 import './style.css';
 
 type Track = {
@@ -9,14 +8,14 @@ type Track = {
 
 const tracks: Track[] = [
   {
-    title: 'Windows Down',
-    artist: 'HoliznaCC0 · CC0 1.0',
-    source: '/audio/windows-down.mp3',
+    title: 'Roomscene Lofi',
+    artist: 'DURU-AI · CC0 1.0',
+    source: '/audio/duru-roomscene-lofi.mp3',
   },
   {
-    title: 'My Lofi Track',
-    artist: 'Your original track',
-    source: '/audio/my-lofi-track.mp3',
+    title: 'AI EP2 Music',
+    artist: 'DURU-AI · CC0 1.0',
+    source: '/audio/duru-ai-ep2-music.mp3',
   },
 ];
 
@@ -50,6 +49,7 @@ const volume = requiredElement<HTMLInputElement>('#volume');
 
 let currentTrackIndex = 0;
 const audio = new Audio();
+audio.autoplay = false;
 audio.volume = Number(volume.value) / 100;
 
 function requiredElement<T extends Element>(selector: string): T {
@@ -111,6 +111,14 @@ audio.addEventListener('error', () => {
   status.textContent = '音源が見つかりません。public/audio/README.md を確認してください。';
 });
 
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
+  });
+}
+
 async function connectToDiscord() {
   const clientId = import.meta.env.VITE_DISCORD_CLIENT_ID;
   if (!clientId) {
@@ -119,6 +127,7 @@ async function connectToDiscord() {
   }
 
   try {
+    const { DiscordSDK } = await import('@discord/embedded-app-sdk');
     const discordSdk = new DiscordSDK(clientId);
     await discordSdk.ready();
     status.textContent = 'Discordに接続しました。Playを押すと再生します。';
