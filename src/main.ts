@@ -52,12 +52,10 @@ if (!app) throw new Error('App root was not found.');
 app.innerHTML = `
   <section class="player" aria-label="Lofi music player">
     <div class="glow glow-one"></div><div class="glow glow-two"></div>
-    <p class="eyebrow">DISCORD ACTIVITY · V0.1</p>
-    <div class="art" aria-hidden="true"><span>☾</span></div>
-    <p class="now-playing">NOW PLAYING</p>
     <h1 id="track-title"></h1>
     <p id="status" class="status">音源を読み込み中…</p>
     <div class="controls">
+      <button id="previous-button" class="previous" type="button"><span aria-hidden="true">←</span> Previous</button>
       <button id="play-button" class="play" type="button" aria-label="再生">▶</button>
       <button id="next-button" class="next" type="button">Next <span aria-hidden="true">→</span></button>
     </div>
@@ -68,6 +66,7 @@ app.innerHTML = `
 
 const title = requiredElement<HTMLHeadingElement>('#track-title');
 const status = requiredElement<HTMLParagraphElement>('#status');
+const previousButton = requiredElement<HTMLButtonElement>('#previous-button');
 const playButton = requiredElement<HTMLButtonElement>('#play-button');
 const nextButton = requiredElement<HTMLButtonElement>('#next-button');
 const volume = requiredElement<HTMLInputElement>('#volume');
@@ -112,15 +111,20 @@ function pauseCurrentTrack() {
   playButton.setAttribute('aria-label', '再生');
 }
 
+function changeTrack(offset: number) {
+  const wasPlaying = !audio.paused;
+  updateTrack((currentTrackIndex + offset + tracks.length) % tracks.length);
+  if (wasPlaying) void playCurrentTrack();
+}
+
 playButton.addEventListener('click', () => {
   if (audio.paused) void playCurrentTrack();
   else pauseCurrentTrack();
 });
 
-nextButton.addEventListener('click', () => {
-  updateTrack((currentTrackIndex + 1) % tracks.length);
-  void playCurrentTrack();
-});
+previousButton.addEventListener('click', () => changeTrack(-1));
+
+nextButton.addEventListener('click', () => changeTrack(1));
 
 volume.addEventListener('input', () => {
   audio.volume = Number(volume.value) / 100;
