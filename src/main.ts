@@ -6,16 +6,18 @@ type Track = {
   source: string;
 };
 
+const audioBaseUrl = `${import.meta.env.BASE_URL}audio/`;
+
 const tracks: Track[] = [
   {
     title: 'Roomscene Lofi',
     artist: 'DURU-AI · CC0 1.0',
-    source: '/audio/duru-roomscene-lofi.mp3',
+    source: `${audioBaseUrl}duru-roomscene-lofi.mp3`,
   },
   {
     title: 'AI EP2 Music',
     artist: 'DURU-AI · CC0 1.0',
-    source: '/audio/duru-ai-ep2-music.mp3',
+    source: `${audioBaseUrl}duru-ai-ep2-music.mp3`,
   },
 ];
 
