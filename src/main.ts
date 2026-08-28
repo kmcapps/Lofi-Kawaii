@@ -37,7 +37,7 @@ app.innerHTML = `
       <button id="play-button" class="play" type="button" aria-label="再生">▶</button>
       <button id="next-button" class="next" type="button">Next <span aria-hidden="true">→</span></button>
     </div>
-    <label class="volume" for="volume">音量 <input id="volume" type="range" min="0" max="100" value="55" /></label>
+    <label class="volume" for="volume">音量 <input id="volume" type="range" min="0" max="100" value="20" /></label>
     <p class="hint">このActivityでは、各参加者がそれぞれの端末で再生します。</p>
   </section>
 `;
