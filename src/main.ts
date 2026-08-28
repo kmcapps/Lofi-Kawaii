@@ -2,7 +2,6 @@ import './style.css';
 
 type Track = {
   title: string;
-  artist: string;
   source: string;
 };
 
@@ -10,14 +9,40 @@ const audioBaseUrl = `${import.meta.env.BASE_URL}audio/`;
 
 const tracks: Track[] = [
   {
-    title: 'Roomscene Lofi',
-    artist: 'DURU-AI · CC0 1.0',
-    source: `${audioBaseUrl}duru-roomscene-lofi.mp3`,
+    title: 'Garden Morning',
+    source: `${audioBaseUrl}Garden_Morning_v3_No_Nylon_82BPM.mp3`,
   },
   {
-    title: 'AI EP2 Music',
-    artist: 'DURU-AI · CC0 1.0',
-    source: `${audioBaseUrl}duru-ai-ep2-music.mp3`,
+    title: 'Moonlit Waterside Room',
+    source: `${audioBaseUrl}Moonlit_Waterside_Room_v6_77BPM.mp3`,
+  },
+  {
+    title: 'Music Box Stroll',
+    source: `${audioBaseUrl}Music_Box_Stroll_v4_MusicBox005_84BPM.mp3`,
+  },
+  {
+    title: 'Quiet Motion',
+    source: `${audioBaseUrl}Quiet_Motion_v1_96BPM.mp3`,
+  },
+  {
+    title: 'Twilight Capital',
+    source: `${audioBaseUrl}Twilight_Capital_v1_88BPM.mp3`,
+  },
+  {
+    title: 'Twilight Frontier',
+    source: `${audioBaseUrl}Twilight_Frontier_v1_76BPM.mp3`,
+  },
+  {
+    title: 'Variant A Six Eight Nocturne',
+    source: `${audioBaseUrl}Variant_A_SixEight_Nocturne_72BPM.mp3`,
+  },
+  {
+    title: 'Variant C Five Four Mystic',
+    source: `${audioBaseUrl}Variant_C_FiveFour_Mystic_80BPM.mp3`,
+  },
+  {
+    title: 'Variant D Night Waltz',
+    source: `${audioBaseUrl}Variant_D_Night_Waltz_90BPM.mp3`,
   },
 ];
 
@@ -31,7 +56,6 @@ app.innerHTML = `
     <div class="art" aria-hidden="true"><span>☾</span></div>
     <p class="now-playing">NOW PLAYING</p>
     <h1 id="track-title"></h1>
-    <p id="track-artist" class="artist"></p>
     <p id="status" class="status">音源を読み込み中…</p>
     <div class="controls">
       <button id="play-button" class="play" type="button" aria-label="再生">▶</button>
@@ -43,7 +67,6 @@ app.innerHTML = `
 `;
 
 const title = requiredElement<HTMLHeadingElement>('#track-title');
-const artist = requiredElement<HTMLParagraphElement>('#track-artist');
 const status = requiredElement<HTMLParagraphElement>('#status');
 const playButton = requiredElement<HTMLButtonElement>('#play-button');
 const nextButton = requiredElement<HTMLButtonElement>('#next-button');
@@ -66,7 +89,6 @@ function updateTrack(index: number) {
   audio.src = track.source;
   audio.load();
   title.textContent = track.title;
-  artist.textContent = track.artist;
   status.textContent = 'Playを押すと再生します';
   playButton.textContent = '▶';
   playButton.setAttribute('aria-label', '再生');
