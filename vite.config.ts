@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/Lofi-Kawaii/' : '/',
+  base: command === 'build' ? './' : '/',
   server: {
     host: '::',
   },
