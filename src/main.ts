@@ -45,6 +45,15 @@ app.innerHTML = `
         <button id="previous-button" class="previous" type="button" aria-label="前の曲"><span aria-hidden="true">⏮</span></button>
         <button id="play-button" class="play" type="button" aria-label="再生">▶</button>
         <button id="next-button" class="next" type="button" aria-label="次の曲"><span aria-hidden="true">⏭</span></button>
+        <button id="ambient-effects-toggle" class="ambient-effects-toggle" type="button" aria-label="環境エフェクトをオンにする" aria-pressed="false" title="環境エフェクト: OFF">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="7.25" cy="7.75" r="2" fill="currentColor" stroke="none"></circle>
+            <circle cx="10.5" cy="5.25" r="2" fill="currentColor" stroke="none"></circle>
+            <circle cx="14.5" cy="5.25" r="2" fill="currentColor" stroke="none"></circle>
+            <circle cx="17.75" cy="7.75" r="2" fill="currentColor" stroke="none"></circle>
+            <path d="M12.5 9.5c-3.8 0-6.75 3.15-6.75 6.25 0 2.4 1.75 3.75 3.95 3.75 1.1 0 1.9-.55 2.8-.55s1.7.55 2.8.55c2.2 0 3.95-1.35 3.95-3.75 0-3.1-2.95-6.25-6.75-6.25Z" fill="currentColor" stroke="none"></path>
+          </svg>
+        </button>
       </div>
       <label class="volume" for="volume">
         <svg class="volume-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -55,13 +64,9 @@ app.innerHTML = `
         <input id="volume" type="range" min="0" max="100" value="20" aria-label="音量" />
       </label>
       <p class="hint">このActivityでは、各参加者がそれぞれの端末で再生します。</p>
-      <span id="resize-handle" class="resize-handle" role="slider" tabindex="0" aria-label="プレイヤーのサイズを変更" aria-valuemin="50" aria-valuemax="150" aria-valuenow="60"></span>
+      <span id="resize-handle" class="resize-handle" role="slider" tabindex="0" aria-label="プレイヤーのサイズを変更" aria-valuemin="50" aria-valuemax="150" aria-valuenow="70"></span>
     </div>
   </section>
-  <aside id="steam-diagnostics" class="steam-diagnostics" aria-label="Steam diagnostics">
-    <strong>Steam diagnostics</strong>
-    <pre id="steam-diagnostics-output"></pre>
-  </aside>
 `;
 
 const playerPanel = requiredElement<HTMLDivElement>('#player-panel');
@@ -70,8 +75,8 @@ const resizeHandle = requiredElement<HTMLSpanElement>('#resize-handle');
 const previousButton = requiredElement<HTMLButtonElement>('#previous-button');
 const playButton = requiredElement<HTMLButtonElement>('#play-button');
 const nextButton = requiredElement<HTMLButtonElement>('#next-button');
+const ambientEffectsToggle = requiredElement<HTMLButtonElement>('#ambient-effects-toggle');
 const volume = requiredElement<HTMLInputElement>('#volume');
-const steamDiagnosticsOutput = requiredElement<HTMLPreElement>('#steam-diagnostics-output');
 
 let currentTrackIndex = 0;
 const audio = new Audio();
@@ -84,67 +89,28 @@ function requiredElement<T extends Element>(selector: string): T {
   return element;
 }
 
-function formatDiagnosticRect(rect: DOMRect) {
-  return `${rect.x.toFixed(1)}, ${rect.y.toFixed(1)} / ${rect.width.toFixed(1)}×${rect.height.toFixed(1)}`;
+const reducedMotionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+let ambientEffectsEnabled = !reducedMotionPreference.matches;
+
+function setAmbientEffectsEnabled(enabled: boolean) {
+  ambientEffectsEnabled = enabled;
+  document.documentElement.dataset.ambientEffects = enabled ? 'on' : 'off';
+  ambientEffectsToggle.classList.toggle('is-active', enabled);
+  ambientEffectsToggle.setAttribute('aria-pressed', String(enabled));
+  ambientEffectsToggle.setAttribute('aria-label', enabled ? '環境エフェクトをオフにする' : '環境エフェクトをオンにする');
+  ambientEffectsToggle.title = `環境エフェクト: ${enabled ? 'ON' : 'OFF'}`;
 }
 
-function shortenDiagnosticValue(value: string, maximumLength = 92) {
-  return value.length <= maximumLength ? value : `${value.slice(0, maximumLength - 1)}…`;
-}
-
-function updateSteamDiagnostics() {
-  const steamElements = document.querySelectorAll<HTMLElement>('.steam-wisp');
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const lines = [
-    `Motion: ${reducedMotion ? 'reduce' : 'no-preference'}`,
-    `Steam elements: ${steamElements.length}`,
-  ];
-  const steam = steamElements[0];
-
-  if (!steam) {
-    lines.push('Animation: unavailable', 'Steam element not found');
-    steamDiagnosticsOutput.textContent = lines.join('\n');
-    return;
-  }
-
-  const steamStyle = window.getComputedStyle(steam);
-  const steamRect = steam.getBoundingClientRect();
-  const layer = steam.closest<HTMLElement>('.steam-layer');
-
-  lines.push(
-    `Animation: ${steamStyle.animationName}`,
-    `Duration: ${steamStyle.animationDuration}`,
-    `Play state: ${steamStyle.animationPlayState}`,
-    `Opacity: ${Number.parseFloat(steamStyle.opacity).toFixed(3)}`,
-    `Transform: ${shortenDiagnosticValue(steamStyle.transform)}`,
-    `Rect: ${formatDiagnosticRect(steamRect)}`,
-    `Display: ${steamStyle.display}`,
-    `Visibility: ${steamStyle.visibility}`,
-    `z-index: ${steamStyle.zIndex}`,
-  );
-
-  if (layer) {
-    const layerStyle = window.getComputedStyle(layer);
-    lines.push(
-      `Layer overflow: ${layerStyle.overflow}`,
-      `Layer z-index: ${layerStyle.zIndex}`,
-      `Layer rect: ${formatDiagnosticRect(layer.getBoundingClientRect())}`,
-    );
-  } else {
-    lines.push('Steam layer: not found');
-  }
-
-  steamDiagnosticsOutput.textContent = lines.join('\n');
-}
+ambientEffectsToggle.addEventListener('click', () => setAmbientEffectsEnabled(!ambientEffectsEnabled));
+setAmbientEffectsEnabled(ambientEffectsEnabled);
 
 const MIN_PANEL_SCALE = 0.5;
 const MAX_PANEL_SCALE = 1.5;
 const VIEWPORT_MARGIN = 12;
-const STEAM_DIAGNOSTICS_INTERVAL_MS = 400;
 
 let panelCenterX = window.innerWidth / 2;
 let panelCenterY = window.innerHeight / 2;
-let panelScale = 0.6;
+let panelScale = 0.7;
 let hasUserMovedPanel = false;
 let dragState: { pointerId: number; startX: number; startY: number; panelX: number; panelY: number } | null = null;
 let resizeState: { pointerId: number; startX: number; startY: number; scale: number; reference: number; left: number; top: number } | null = null;
@@ -319,8 +285,6 @@ function handleViewportResize() {
 
 window.addEventListener('resize', handleViewportResize);
 applyPanelScale();
-updateSteamDiagnostics();
-const steamDiagnosticsTimer = window.setInterval(updateSteamDiagnostics, STEAM_DIAGNOSTICS_INTERVAL_MS);
 
 function updateTrack(index: number) {
   currentTrackIndex = index;
@@ -379,7 +343,6 @@ audio.addEventListener('ended', () => {
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
-    window.clearInterval(steamDiagnosticsTimer);
     window.removeEventListener('resize', handleViewportResize);
     audio.pause();
     audio.removeAttribute('src');
