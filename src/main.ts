@@ -37,8 +37,6 @@ app.innerHTML = `
   <section class="player" aria-label="Lofi music player">
     <div class="steam-layer" aria-hidden="true">
       <span class="steam-wisp"></span>
-      <span class="steam-wisp"></span>
-      <span class="steam-wisp"></span>
     </div>
     <div class="glow glow-one"></div><div class="glow glow-two"></div>
     <div id="player-panel" class="player-panel">
