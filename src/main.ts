@@ -58,6 +58,10 @@ app.innerHTML = `
       <span id="resize-handle" class="resize-handle" role="slider" tabindex="0" aria-label="プレイヤーのサイズを変更" aria-valuemin="50" aria-valuemax="150" aria-valuenow="60"></span>
     </div>
   </section>
+  <aside id="steam-diagnostics" class="steam-diagnostics" aria-label="Steam diagnostics">
+    <strong>Steam diagnostics</strong>
+    <pre id="steam-diagnostics-output"></pre>
+  </aside>
 `;
 
 const playerPanel = requiredElement<HTMLDivElement>('#player-panel');
@@ -67,6 +71,7 @@ const previousButton = requiredElement<HTMLButtonElement>('#previous-button');
 const playButton = requiredElement<HTMLButtonElement>('#play-button');
 const nextButton = requiredElement<HTMLButtonElement>('#next-button');
 const volume = requiredElement<HTMLInputElement>('#volume');
+const steamDiagnosticsOutput = requiredElement<HTMLPreElement>('#steam-diagnostics-output');
 
 let currentTrackIndex = 0;
 const audio = new Audio();
@@ -79,9 +84,63 @@ function requiredElement<T extends Element>(selector: string): T {
   return element;
 }
 
+function formatDiagnosticRect(rect: DOMRect) {
+  return `${rect.x.toFixed(1)}, ${rect.y.toFixed(1)} / ${rect.width.toFixed(1)}×${rect.height.toFixed(1)}`;
+}
+
+function shortenDiagnosticValue(value: string, maximumLength = 92) {
+  return value.length <= maximumLength ? value : `${value.slice(0, maximumLength - 1)}…`;
+}
+
+function updateSteamDiagnostics() {
+  const steamElements = document.querySelectorAll<HTMLElement>('.steam-wisp');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const lines = [
+    `Motion: ${reducedMotion ? 'reduce' : 'no-preference'}`,
+    `Steam elements: ${steamElements.length}`,
+  ];
+  const steam = steamElements[0];
+
+  if (!steam) {
+    lines.push('Animation: unavailable', 'Steam element not found');
+    steamDiagnosticsOutput.textContent = lines.join('\n');
+    return;
+  }
+
+  const steamStyle = window.getComputedStyle(steam);
+  const steamRect = steam.getBoundingClientRect();
+  const layer = steam.closest<HTMLElement>('.steam-layer');
+
+  lines.push(
+    `Animation: ${steamStyle.animationName}`,
+    `Duration: ${steamStyle.animationDuration}`,
+    `Play state: ${steamStyle.animationPlayState}`,
+    `Opacity: ${Number.parseFloat(steamStyle.opacity).toFixed(3)}`,
+    `Transform: ${shortenDiagnosticValue(steamStyle.transform)}`,
+    `Rect: ${formatDiagnosticRect(steamRect)}`,
+    `Display: ${steamStyle.display}`,
+    `Visibility: ${steamStyle.visibility}`,
+    `z-index: ${steamStyle.zIndex}`,
+  );
+
+  if (layer) {
+    const layerStyle = window.getComputedStyle(layer);
+    lines.push(
+      `Layer overflow: ${layerStyle.overflow}`,
+      `Layer z-index: ${layerStyle.zIndex}`,
+      `Layer rect: ${formatDiagnosticRect(layer.getBoundingClientRect())}`,
+    );
+  } else {
+    lines.push('Steam layer: not found');
+  }
+
+  steamDiagnosticsOutput.textContent = lines.join('\n');
+}
+
 const MIN_PANEL_SCALE = 0.5;
 const MAX_PANEL_SCALE = 1.5;
 const VIEWPORT_MARGIN = 12;
+const STEAM_DIAGNOSTICS_INTERVAL_MS = 400;
 
 let panelCenterX = window.innerWidth / 2;
 let panelCenterY = window.innerHeight / 2;
@@ -260,6 +319,8 @@ function handleViewportResize() {
 
 window.addEventListener('resize', handleViewportResize);
 applyPanelScale();
+updateSteamDiagnostics();
+const steamDiagnosticsTimer = window.setInterval(updateSteamDiagnostics, STEAM_DIAGNOSTICS_INTERVAL_MS);
 
 function updateTrack(index: number) {
   currentTrackIndex = index;
@@ -318,6 +379,7 @@ audio.addEventListener('ended', () => {
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
+    window.clearInterval(steamDiagnosticsTimer);
     window.removeEventListener('resize', handleViewportResize);
     audio.pause();
     audio.removeAttribute('src');
