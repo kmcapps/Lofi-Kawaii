@@ -9,40 +9,24 @@ const audioBaseUrl = `${import.meta.env.BASE_URL}audio/`;
 
 const tracks: Track[] = [
   {
-    title: 'Garden Morning',
-    source: `${audioBaseUrl}Garden_Morning_v3_No_Nylon_82BPM.mp3`,
-  },
-  {
-    title: 'Moonlit Waterside Room',
-    source: `${audioBaseUrl}Moonlit_Waterside_Room_v6_77BPM.mp3`,
+    title: 'Quiet Motion',
+    source: `${audioBaseUrl}01_Quiet_Motion_v1_96BPM.mp3`,
   },
   {
     title: 'Music Box Stroll',
-    source: `${audioBaseUrl}Music_Box_Stroll_v4_MusicBox005_84BPM.mp3`,
+    source: `${audioBaseUrl}02_Music_Box_Stroll_v4_MusicBox005_84BPM.mp3`,
   },
   {
-    title: 'Quiet Motion',
-    source: `${audioBaseUrl}Quiet_Motion_v1_96BPM.mp3`,
-  },
-  {
-    title: 'Twilight Capital',
-    source: `${audioBaseUrl}Twilight_Capital_v1_88BPM.mp3`,
-  },
-  {
-    title: 'Twilight Frontier',
-    source: `${audioBaseUrl}Twilight_Frontier_v1_76BPM.mp3`,
+    title: 'Moonlit Waterside Room',
+    source: `${audioBaseUrl}03_Moonlit_Waterside_Room_v6_77BPM.mp3`,
   },
   {
     title: 'Variant A Six Eight Nocturne',
-    source: `${audioBaseUrl}Variant_A_SixEight_Nocturne_72BPM.mp3`,
-  },
-  {
-    title: 'Variant C Five Four Mystic',
-    source: `${audioBaseUrl}Variant_C_FiveFour_Mystic_80BPM.mp3`,
+    source: `${audioBaseUrl}04_Variant_A_SixEight_Nocturne_72BPM.mp3`,
   },
   {
     title: 'Variant D Night Waltz',
-    source: `${audioBaseUrl}Variant_D_Night_Waltz_90BPM.mp3`,
+    source: `${audioBaseUrl}05_Variant_D_Night_Waltz_90BPM.mp3`,
   },
 ];
 
@@ -51,6 +35,11 @@ if (!app) throw new Error('App root was not found.');
 
 app.innerHTML = `
   <section class="player" aria-label="Lofi music player">
+    <div class="steam-layer" aria-hidden="true">
+      <span class="steam-wisp"></span>
+      <span class="steam-wisp"></span>
+      <span class="steam-wisp"></span>
+    </div>
     <div class="glow glow-one"></div><div class="glow glow-two"></div>
     <div id="player-panel" class="player-panel">
       <h1 id="track-title" class="drag-handle" title="ドラッグしてプレイヤーを移動"></h1>
@@ -68,7 +57,7 @@ app.innerHTML = `
         <input id="volume" type="range" min="0" max="100" value="20" aria-label="音量" />
       </label>
       <p class="hint">このActivityでは、各参加者がそれぞれの端末で再生します。</p>
-      <span id="resize-handle" class="resize-handle" role="slider" tabindex="0" aria-label="プレイヤーのサイズを変更" aria-valuemin="50" aria-valuemax="150" aria-valuenow="100"></span>
+      <span id="resize-handle" class="resize-handle" role="slider" tabindex="0" aria-label="プレイヤーのサイズを変更" aria-valuemin="50" aria-valuemax="150" aria-valuenow="60"></span>
     </div>
   </section>
 `;
@@ -98,7 +87,7 @@ const VIEWPORT_MARGIN = 12;
 
 let panelCenterX = window.innerWidth / 2;
 let panelCenterY = window.innerHeight / 2;
-let panelScale = 1;
+let panelScale = 0.6;
 let hasUserMovedPanel = false;
 let dragState: { pointerId: number; startX: number; startY: number; panelX: number; panelY: number } | null = null;
 let resizeState: { pointerId: number; startX: number; startY: number; scale: number; reference: number; left: number; top: number } | null = null;
