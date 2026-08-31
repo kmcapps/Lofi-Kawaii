@@ -1,4 +1,5 @@
 import './style.css';
+import { recordAnonymousLaunch } from './analytics';
 
 type Track = {
   title: string;
@@ -362,4 +363,5 @@ async function connectToDiscord() {
 }
 
 updateTrack(0);
+recordAnonymousLaunch();
 void connectToDiscord();

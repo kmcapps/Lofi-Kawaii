@@ -61,14 +61,15 @@
       <header>
         <p class="eyebrow">Lofi-Kawaii · KMC Apps</p>
         <h1>Privacy Policy</h1>
-        <p class="meta">Effective: August 28, 2026</p>
+        <p class="meta">Effective: August 31, 2026</p>
       </header>
 
       <div class="summary">
         <p>
-          <strong>Summary:</strong> Lofi-Kawaii does not use OAuth, request Discord profile information, operate an
-          account or user database, use analytics, or persist your playback settings. Discord and the infrastructure used to
-          deliver the Activity may process technical information needed to launch and serve it.
+          <strong>Summary:</strong> Lofi-Kawaii does not use OAuth or request Discord profile information. It stores a
+          random, Activity-specific identifier on your device and records one minimal startup event to estimate unique
+          users and return usage over a rolling one-year period. It does not transmit playback activity, track choices,
+          volume, or environmental-effect settings.
         </p>
       </div>
 
@@ -79,15 +80,15 @@
         information under its own policies.
       </p>
 
-      <h2>2. Information Lofi-Kawaii Does Not Request or Store</h2>
+      <h2>2. Information Lofi-Kawaii Does Not Request</h2>
       <p>The current version of Lofi-Kawaii does not:</p>
       <ul>
         <li>use an OAuth2 login or request an OAuth access token;</li>
         <li>request Discord profile data, usernames, avatars, friend lists, messages, or voice content;</li>
         <li>store Discord user, server, or channel IDs in a KMC Apps database;</li>
-        <li>use cookies, localStorage, sessionStorage, or IndexedDB;</li>
-        <li>use analytics, advertising, tracking pixels, or behavioral telemetry;</li>
-        <li>operate a KMC Apps account system, application backend, or user database; or</li>
+        <li>use cookies, sessionStorage, or IndexedDB;</li>
+        <li>use advertising, tracking pixels, cross-service tracking, or behavioral telemetry;</li>
+        <li>operate a KMC Apps account system or profile database; or</li>
         <li>save user input, playback history, track selection, or volume preferences.</li>
       </ul>
 
@@ -105,6 +106,20 @@
         guild or channel records.
       </p>
 
+      <h3>Anonymous usage measurement</h3>
+      <p>
+        To understand approximate usage, Lofi-Kawaii creates a random UUID using the browser's cryptographic API and
+        stores it in localStorage under a key used only by this Activity. On startup, the Activity sends that identifier
+        once to a KMC Apps Cloudflare Worker. It does not send your Discord ID, profile, playback state, selected track,
+        volume, button activity, environmental-effect settings, country, or precise location.
+      </p>
+      <p>
+        The Worker converts the identifier to a keyed HMAC hash before storing it in Cloudflare D1. The database stores
+        only that hash, the first and most recent JST usage dates, and whether the same identifier was seen on a later
+        JST date. These records are used only to estimate unique users and the percentage that return on a different day.
+        They represent a browser or Discord WebView storage installation, not a verified individual person.
+      </p>
+
       <h2>4. Hosting and Network Information</h2>
       <p>
         Discord and the hosting or content-delivery provider used to serve Lofi-Kawaii may automatically process technical
@@ -113,8 +128,9 @@
         to deliver the Activity, maintain reliability, prevent abuse, and diagnose failures.
       </p>
       <p>
-        KMC Apps does not operate a separate application-access logging system or user database. Infrastructure providers
-        determine their own technical logging and retention practices under their agreements and privacy policies.
+        KMC Apps does not copy this technical request information into its anonymous usage database. Infrastructure
+        providers determine their own technical logging and retention practices under their agreements and privacy
+        policies.
       </p>
 
       <h2>5. Third-Party Services</h2>
@@ -127,27 +143,42 @@
           <strong>Hosting and delivery providers:</strong> serve the HTML, CSS, JavaScript, images, and audio required for
           the Activity and may process the technical request information described above.
         </li>
+        <li>
+          <strong>Cloudflare:</strong> provides the Worker, abuse controls, and D1 database used for the anonymous usage
+          measurement described above. See the
+          <a href="https://www.cloudflare.com/privacypolicy/" rel="noreferrer">Cloudflare Privacy Policy</a>.
+        </li>
       </ul>
-      <p>Lofi-Kawaii does not include third-party analytics, advertising networks, or social-tracking scripts.</p>
+      <p>Lofi-Kawaii does not include advertising networks, social-tracking scripts, or third-party behavioral analytics.</p>
 
       <h2>6. Retention and Deletion</h2>
       <p>
-        Because Lofi-Kawaii has no KMC Apps user database, it does not retain application account data, Discord profile
-        data, playback history, or saved preferences for deletion. In-memory playback state ends when the page or
-        Activity process is closed. Discord and the hosting provider may retain technical request information under their
-        own policies and configurations.
+        Anonymous usage records are retained until the stored identifier has not been seen for more than one year, based
+        on JST dates, and are then deleted by a scheduled cleanup. The reported unique-user total is therefore an
+        approximate rolling one-year total, not a permanent lifetime count. In-memory playback state ends when the page
+        or Activity process is closed. The local anonymous identifier remains until site data is cleared or storage is
+        otherwise reset.
       </p>
       <p>
-        If you believe Lofi-Kawaii has retained information about you, contact KMC Apps through the official KMC Apps
-        Community support server linked from Lofi-Kawaii's Discord application profile or App Directory listing. Please
-        direct requests concerning data controlled by Discord or an infrastructure provider to that provider.
+        Lofi-Kawaii does not add an opt-out control to the player interface. If you do not want future launches included
+        in this anonymous measurement, do not launch the Activity or use browser or platform controls to block site
+        storage for it, where such controls are available. Clearing the Activity's site data removes the locally stored
+        identifier, but launching again with storage available creates a new identifier and resumes measurement; clearing
+        data is therefore a reset, not a persistent opt-out setting.
+      </p>
+      <p>
+        The stored HMAC hash is not linked to a Discord account, so KMC Apps cannot locate a particular database row from
+        a Discord username or profile. Privacy questions may be submitted through the official KMC Apps Community support
+        server linked from Lofi-Kawaii's Discord application profile or App Directory listing. Requests concerning data
+        controlled by Discord or another infrastructure provider should be directed to that provider.
       </p>
 
       <h2>7. Security</h2>
       <p>
-        KMC Apps uses reasonable measures appropriate to this small, static Activity and limits application data handling
-        by avoiding accounts, databases, analytics, and unnecessary Discord API access. No internet transmission or
-        software can be guaranteed completely secure.
+        KMC Apps uses reasonable measures appropriate to this small Activity. The anonymous identifier is generated with
+        a cryptographic browser API, transformed with a server-side secret before database storage, retained only for the
+        stated period, and kept separate from Discord account information. KMC Apps also avoids unnecessary Discord API
+        access. No internet transmission or software can be guaranteed completely secure.
       </p>
 
       <h2>8. Children</h2>

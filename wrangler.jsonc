@@ -1,0 +1,38 @@
+{
+  "name": "lofi-kawaii-analytics",
+  "main": "worker/src/index.ts",
+  "account_id": "66c1971763cb8c4006fe10586b41b2c9",
+  "compatibility_date": "2026-08-31",
+  "workers_dev": true,
+  "preview_urls": false,
+  "keep_vars": true,
+  "vars": {
+    "ALLOWED_ORIGIN": "https://1542526202458415274.discordsays.com"
+  },
+  "secrets": {
+    "required": ["ANALYTICS_HMAC_SECRET"]
+  },
+  "observability": {
+    "enabled": true
+  },
+  "triggers": {
+    "crons": ["10 15 * * *"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lofi-kawaii-analytics-db",
+      "database_id": "0c57e210-393e-4d3e-8c9a-20e45dd1b8b5"
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "ANALYTICS_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 10,
+        "period": 60
+      }
+    }
+  ]
+}
