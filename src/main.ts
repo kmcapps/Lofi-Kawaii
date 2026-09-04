@@ -11,7 +11,7 @@ const audioBaseUrl = `${import.meta.env.BASE_URL}audio/`;
 const tracks: Track[] = [
   {
     title: 'Quiet Motion',
-    source: `${audioBaseUrl}01_Quiet_Motion_v1_96BPM.mp3`,
+    source: `${audioBaseUrl}01_Quiet_Motion_v2_96BPM.mp3`,
   },
   {
     title: 'Music Box Stroll',
