@@ -129,6 +129,66 @@ const tracks: Track[] = [
     title: 'Homeward Through the Gates',
     source: `${audioBaseUrl}30_Homeward_Through_the_Gates_86BPM.mp3`,
   },
+  {
+    title: 'Moonlit Shrine Reverie',
+    source: `${audioBaseUrl}31_Moonlit_Shrine_Reverie.mp3`,
+  },
+  {
+    title: 'Bamboo Flute Moon',
+    source: `${audioBaseUrl}32_Bamboo_Flute_Moon.mp3`,
+  },
+  {
+    title: 'Lantern Path Under the Full Moon',
+    source: `${audioBaseUrl}33_Lantern_Path_Under_the_Full_Moon.mp3`,
+  },
+  {
+    title: 'Moon on Temple Water',
+    source: `${audioBaseUrl}34_Moon_on_Temple_Water.mp3`,
+  },
+  {
+    title: 'Midnight Torii Shamisen',
+    source: `${audioBaseUrl}35_Midnight_Torii_Shamisen.mp3`,
+  },
+  {
+    title: 'Glowing Bamboo Sanctuary',
+    source: `${audioBaseUrl}36_Glowing_Bamboo_Sanctuary.mp3`,
+  },
+  {
+    title: 'Stone Steps at Moonrise',
+    source: `${audioBaseUrl}37_Stone_Steps_at_Moonrise.mp3`,
+  },
+  {
+    title: 'Silver Pagoda Dream',
+    source: `${audioBaseUrl}38_Silver_Pagoda_Dream.mp3`,
+  },
+  {
+    title: 'Bamboo Corridor Groove',
+    source: `${audioBaseUrl}39_Bamboo_Corridor_Groove.mp3`,
+  },
+  {
+    title: 'Fox Shrine Nocturne',
+    source: `${audioBaseUrl}40_Fox_Shrine_Nocturne.mp3`,
+  },
+  {
+    title: 'Starlit Shrine Courtyard',
+    source: `${audioBaseUrl}41_Starlit_Shrine_Courtyard.mp3`,
+  },
+  {
+    title: 'Misty Bamboo Moon',
+    source: `${audioBaseUrl}42_Misty_Bamboo_Moon.mp3`,
+  },
+  {
+    title: 'Afterglow of the Festival',
+    source: `${audioBaseUrl}43_Afterglow_of_the_Festival.mp3`,
+  },
+  {
+    title: 'Blue Moon Forest Shrine',
+    source: `${audioBaseUrl}44_Blue_Moon_Forest_Shrine.mp3`,
+  },
+  {
+    title: 'Dawn Beyond Bamboo',
+    source: `${audioBaseUrl}45_Dawn_Beyond_Bamboo.mp3`,
+  },
 ];
 
 const app = document.querySelector<HTMLDivElement>('#app');
