@@ -29,6 +29,46 @@ const tracks: Track[] = [
     title: 'Variant D Night Waltz',
     source: `${audioBaseUrl}05_Variant_D_Night_Waltz_90BPM.mp3`,
   },
+  {
+    title: 'Still Lake Morning',
+    source: `${audioBaseUrl}06_Still_Lake_Morning.mp3`,
+  },
+  {
+    title: 'Coffee by the Window',
+    source: `${audioBaseUrl}07_Coffee_by_the_Window.mp3`,
+  },
+  {
+    title: 'Blanket and Blue Sky',
+    source: `${audioBaseUrl}08_Blanket_and_Blue_Sky.mp3`,
+  },
+  {
+    title: 'Quiet Ripples',
+    source: `${audioBaseUrl}09_Quiet_Ripples.mp3`,
+  },
+  {
+    title: 'Slow Sunday Light',
+    source: `${audioBaseUrl}10_Slow_Sunday_Light.mp3`,
+  },
+  {
+    title: 'Pillow-side Daydream',
+    source: `${audioBaseUrl}11_Pillow-side_Daydream.mp3`,
+  },
+  {
+    title: 'Cedar Cabin Coffee',
+    source: `${audioBaseUrl}12_Cedar_Cabin_Coffee.mp3`,
+  },
+  {
+    title: 'Clouds Over the Lake',
+    source: `${audioBaseUrl}13_Clouds_Over_the_Lake.mp3`,
+  },
+  {
+    title: 'Afternoon Stillness',
+    source: `${audioBaseUrl}14_Afternoon_Stillness.mp3`,
+  },
+  {
+    title: 'Dusk in Soft Blue',
+    source: `${audioBaseUrl}15_Dusk_in_Soft_Blue.mp3`,
+  },
 ];
 
 const app = document.querySelector<HTMLDivElement>('#app');
