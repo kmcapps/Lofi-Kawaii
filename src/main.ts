@@ -69,6 +69,66 @@ const tracks: Track[] = [
     title: 'Dusk in Soft Blue',
     source: `${audioBaseUrl}15_Dusk_in_Soft_Blue.mp3`,
   },
+  {
+    title: 'Sunlit Stone Avenue',
+    source: `${audioBaseUrl}16_Sunlit_Stone_Avenue_90BPM.mp3`,
+  },
+  {
+    title: 'Arcane Bell Tower',
+    source: `${audioBaseUrl}17_Arcane_Bell_Tower_84BPM.mp3`,
+  },
+  {
+    title: 'Willowmere Harbor',
+    source: `${audioBaseUrl}18_Willowmere_Harbor_86BPM.mp3`,
+  },
+  {
+    title: 'Lanterns of the Old Market',
+    source: `${audioBaseUrl}19_Lanterns_of_the_Old_Market_94BPM.mp3`,
+  },
+  {
+    title: 'Emerald Chapel Garden',
+    source: `${audioBaseUrl}20_Emerald_Chapel_Garden_76BPM.mp3`,
+  },
+  {
+    title: 'Moonwell Academy',
+    source: `${audioBaseUrl}21_Moonwell_Academy_82BPM.mp3`,
+  },
+  {
+    title: 'Rivergate Morning',
+    source: `${audioBaseUrl}22_Rivergate_Morning_92BPM.mp3`,
+  },
+  {
+    title: 'Mistwood Village',
+    source: `${audioBaseUrl}23_Mistwood_Village_78BPM.mp3`,
+  },
+  {
+    title: 'Starlit Alchemist Quarter',
+    source: `${audioBaseUrl}24_Starlit_Alchemist_Quarter_88BPM.mp3`,
+  },
+  {
+    title: 'Golden Fountain Plaza',
+    source: `${audioBaseUrl}25_Golden_Fountain_Plaza_96BPM.mp3`,
+  },
+  {
+    title: 'Whispering Library',
+    source: `${audioBaseUrl}26_Whispering_Library_72BPM.mp3`,
+  },
+  {
+    title: 'Rosebridge Festival',
+    source: `${audioBaseUrl}27_Rosebridge_Festival_102BPM.mp3`,
+  },
+  {
+    title: 'Silverleaf Outskirts',
+    source: `${audioBaseUrl}28_Silverleaf_Outskirts_80BPM.mp3`,
+  },
+  {
+    title: 'Twilight Clockwork Lane',
+    source: `${audioBaseUrl}29_Twilight_Clockwork_Lane_91BPM.mp3`,
+  },
+  {
+    title: 'Homeward Through the Gates',
+    source: `${audioBaseUrl}30_Homeward_Through_the_Gates_86BPM.mp3`,
+  },
 ];
 
 const app = document.querySelector<HTMLDivElement>('#app');
