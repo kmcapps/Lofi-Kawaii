@@ -5,6 +5,12 @@ import {
   moveWithinPlaylist,
   type PlaylistMode,
 } from './playlist-mode';
+import {
+  clampSeekTime,
+  formatPlaybackTime,
+  seekProgress,
+  SEEK_THEME_BY_MODE,
+} from './seek';
 
 type Track = {
   title: string;
@@ -227,6 +233,13 @@ app.innerHTML = `
           </svg>
         </button>
       </div>
+      <div id="seek-control" class="seek-control" data-theme="all">
+        <div class="seek-times" aria-hidden="true">
+          <span id="current-time">0:00</span>
+          <span id="duration-time">0:00</span>
+        </div>
+        <input id="seek" type="range" min="0" max="0" step="0.1" value="0" aria-label="再生位置" aria-valuetext="0:00 / 0:00" disabled />
+      </div>
       <label class="volume" for="volume">
         <svg class="volume-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M4 9v6h4l5 4V5L8 9H4Z"></path>
@@ -249,6 +262,10 @@ const previousButton = requiredElement<HTMLButtonElement>('#previous-button');
 const playButton = requiredElement<HTMLButtonElement>('#play-button');
 const nextButton = requiredElement<HTMLButtonElement>('#next-button');
 const ambientEffectsToggle = requiredElement<HTMLButtonElement>('#ambient-effects-toggle');
+const seekControl = requiredElement<HTMLDivElement>('#seek-control');
+const seek = requiredElement<HTMLInputElement>('#seek');
+const currentTime = requiredElement<HTMLSpanElement>('#current-time');
+const durationTime = requiredElement<HTMLSpanElement>('#duration-time');
 const volume = requiredElement<HTMLInputElement>('#volume');
 
 let currentTrackIndex = 0;
@@ -308,6 +325,10 @@ function applyPanelScale() {
   setScaledLength('--panel-mode-font', 0.66, 'rem');
   setScaledLength('--panel-mode-padding-block', 5);
   setScaledLength('--panel-mode-padding-inline', 8);
+  setScaledLength('--panel-seek-width', 320);
+  setScaledLength('--panel-seek-font', 0.64, 'rem');
+  setScaledLength('--panel-seek-track-height', 7);
+  setScaledLength('--panel-seek-thumb-size', 18);
   setScaledLength('--panel-controls-gap', 10);
   setScaledLength('--panel-play-size', 48);
   setScaledLength('--panel-play-font', 1, 'rem');
@@ -469,6 +490,7 @@ function updateTrack(index: number) {
   const track = tracks[currentTrackIndex];
   audio.src = track.source;
   audio.load();
+  resetSeekDisplay();
   title.textContent = track.title;
   playButton.textContent = '▶';
   playButton.setAttribute('aria-label', '再生');
@@ -476,6 +498,31 @@ function updateTrack(index: number) {
     if (hasUserMovedPanel) clampPanelToViewport();
     else positionPanelAtDefault();
   });
+}
+
+function resetSeekDisplay() {
+  seek.value = '0';
+  seek.max = '0';
+  seek.disabled = true;
+  seek.style.setProperty('--seek-progress', '0%');
+  currentTime.textContent = '0:00';
+  durationTime.textContent = '0:00';
+  seek.setAttribute('aria-valuetext', '0:00 / 0:00');
+}
+
+function updateSeekDisplay() {
+  const duration = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0;
+  const position = clampSeekTime(audio.currentTime, duration);
+  const positionLabel = formatPlaybackTime(position);
+  const durationLabel = formatPlaybackTime(duration);
+
+  seek.max = String(duration);
+  seek.value = String(position);
+  seek.disabled = duration === 0;
+  seek.style.setProperty('--seek-progress', `${seekProgress(position, duration)}%`);
+  currentTime.textContent = positionLabel;
+  durationTime.textContent = durationLabel;
+  seek.setAttribute('aria-valuetext', `${positionLabel} / ${durationLabel}`);
 }
 
 async function playCurrentTrack() {
@@ -518,14 +565,24 @@ for (const button of playlistModeButtons) {
       modeButton.classList.toggle('is-active', isActive);
       modeButton.setAttribute('aria-pressed', String(isActive));
     }
+    seekControl.dataset.theme = SEEK_THEME_BY_MODE[activePlaylistMode];
     updateTrack(firstTrackIndex(activePlaylistMode));
     void playCurrentTrack();
   });
 }
 
+seek.addEventListener('input', () => {
+  audio.currentTime = clampSeekTime(Number(seek.value), audio.duration);
+  updateSeekDisplay();
+});
+
 volume.addEventListener('input', () => {
   audio.volume = Number(volume.value) / 100;
 });
+
+audio.addEventListener('loadedmetadata', updateSeekDisplay);
+audio.addEventListener('durationchange', updateSeekDisplay);
+audio.addEventListener('timeupdate', updateSeekDisplay);
 
 audio.addEventListener('ended', () => {
   updateTrack(moveWithinPlaylist(currentTrackIndex, 1, activePlaylistMode));
