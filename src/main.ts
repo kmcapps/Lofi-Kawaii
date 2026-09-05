@@ -1,5 +1,10 @@
 import './style.css';
 import { recordAnonymousLaunch } from './analytics';
+import {
+  firstTrackIndex,
+  moveWithinPlaylist,
+  type PlaylistMode,
+} from './playlist-mode';
 
 type Track = {
   title: string;
@@ -202,6 +207,12 @@ app.innerHTML = `
     <div class="glow glow-one"></div><div class="glow glow-two"></div>
     <div id="player-panel" class="player-panel">
       <h1 id="track-title" class="drag-handle" title="ドラッグしてプレイヤーを移動"></h1>
+      <div class="playlist-modes" role="group" aria-label="プレイリスト">
+        <button class="playlist-mode is-active" type="button" data-playlist-mode="all" aria-pressed="true">ALL</button>
+        <button class="playlist-mode" type="button" data-playlist-mode="chill" aria-pressed="false">CHILL</button>
+        <button class="playlist-mode" type="button" data-playlist-mode="fantasy" aria-pressed="false">FANTASY</button>
+        <button class="playlist-mode" type="button" data-playlist-mode="japanese" aria-pressed="false">JAPANESE</button>
+      </div>
       <div class="controls">
         <button id="previous-button" class="previous" type="button" aria-label="前の曲"><span aria-hidden="true">⏮</span></button>
         <button id="play-button" class="play" type="button" aria-label="再生">▶</button>
@@ -233,6 +244,7 @@ app.innerHTML = `
 const playerPanel = requiredElement<HTMLDivElement>('#player-panel');
 const title = requiredElement<HTMLHeadingElement>('#track-title');
 const resizeHandle = requiredElement<HTMLSpanElement>('#resize-handle');
+const playlistModeButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-playlist-mode]'));
 const previousButton = requiredElement<HTMLButtonElement>('#previous-button');
 const playButton = requiredElement<HTMLButtonElement>('#play-button');
 const nextButton = requiredElement<HTMLButtonElement>('#next-button');
@@ -240,6 +252,7 @@ const ambientEffectsToggle = requiredElement<HTMLButtonElement>('#ambient-effect
 const volume = requiredElement<HTMLInputElement>('#volume');
 
 let currentTrackIndex = 0;
+let activePlaylistMode: PlaylistMode = 'all';
 const audio = new Audio();
 audio.autoplay = false;
 audio.volume = Number(volume.value) / 100;
@@ -291,6 +304,10 @@ function applyPanelScale() {
   setScaledLength('--panel-title-fluid', 3.8, 'vw');
   setScaledLength('--panel-title-max', 1.95, 'rem');
   setScaledLength('--panel-title-width', 380);
+  setScaledLength('--panel-mode-gap', 5);
+  setScaledLength('--panel-mode-font', 0.66, 'rem');
+  setScaledLength('--panel-mode-padding-block', 5);
+  setScaledLength('--panel-mode-padding-inline', 8);
   setScaledLength('--panel-controls-gap', 10);
   setScaledLength('--panel-play-size', 48);
   setScaledLength('--panel-play-font', 1, 'rem');
@@ -480,7 +497,7 @@ function pauseCurrentTrack() {
 
 function changeTrack(offset: number) {
   const wasPlaying = !audio.paused;
-  updateTrack((currentTrackIndex + offset + tracks.length) % tracks.length);
+  updateTrack(moveWithinPlaylist(currentTrackIndex, offset, activePlaylistMode));
   if (wasPlaying) void playCurrentTrack();
 }
 
@@ -493,12 +510,25 @@ previousButton.addEventListener('click', () => changeTrack(-1));
 
 nextButton.addEventListener('click', () => changeTrack(1));
 
+for (const button of playlistModeButtons) {
+  button.addEventListener('click', () => {
+    activePlaylistMode = button.dataset.playlistMode as PlaylistMode;
+    for (const modeButton of playlistModeButtons) {
+      const isActive = modeButton === button;
+      modeButton.classList.toggle('is-active', isActive);
+      modeButton.setAttribute('aria-pressed', String(isActive));
+    }
+    updateTrack(firstTrackIndex(activePlaylistMode));
+    void playCurrentTrack();
+  });
+}
+
 volume.addEventListener('input', () => {
   audio.volume = Number(volume.value) / 100;
 });
 
 audio.addEventListener('ended', () => {
-  updateTrack((currentTrackIndex + 1) % tracks.length);
+  updateTrack(moveWithinPlaylist(currentTrackIndex, 1, activePlaylistMode));
   void playCurrentTrack();
 });
 
