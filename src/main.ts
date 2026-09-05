@@ -271,7 +271,7 @@ const VIEWPORT_MARGIN = 12;
 
 let panelCenterX = window.innerWidth / 2;
 let panelCenterY = window.innerHeight / 2;
-let panelScale = 0.7;
+let panelScale = 0.8;
 let hasUserMovedPanel = false;
 let dragState: { pointerId: number; startX: number; startY: number; panelX: number; panelY: number } | null = null;
 let resizeState: { pointerId: number; startX: number; startY: number; scale: number; reference: number; left: number; top: number } | null = null;
