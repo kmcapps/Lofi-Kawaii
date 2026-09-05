@@ -248,7 +248,6 @@ app.innerHTML = `
         </svg>
         <input id="volume" type="range" min="0" max="100" value="20" aria-label="音量" />
       </label>
-      <p class="hint">このActivityでは、各参加者がそれぞれの端末で再生します。</p>
       <span id="resize-handle" class="resize-handle" role="slider" tabindex="0" aria-label="プレイヤーのサイズを変更" aria-valuemin="50" aria-valuemax="150" aria-valuenow="70"></span>
     </div>
   </section>
