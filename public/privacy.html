@@ -61,15 +61,15 @@
       <header>
         <p class="eyebrow">Lofi-Kawaii · KMC Apps</p>
         <h1>Privacy Policy</h1>
-        <p class="meta">Effective: August 31, 2026</p>
+        <p class="meta">Effective: September 12, 2026</p>
       </header>
 
       <div class="summary">
         <p>
           <strong>Summary:</strong> Lofi-Kawaii does not use OAuth or request Discord profile information. It stores a
-          random, Activity-specific identifier on your device and records one minimal startup event to estimate unique
-          users and return usage over a rolling one-year period. It does not transmit playback activity, track choices,
-          volume, or environmental-effect settings.
+          random, Activity-specific identifier on your device and records minimal anonymous usage information to estimate
+          unique users, return usage, daily usage, and country-level usage over a rolling one-year period. It does not
+          transmit playback activity, track choices, volume, or environmental-effect settings.
         </p>
       </div>
 
@@ -111,13 +111,18 @@
         To understand approximate usage, Lofi-Kawaii creates a random UUID using the browser's cryptographic API and
         stores it in localStorage under a key used only by this Activity. On startup, the Activity sends that identifier
         once to a KMC Apps Cloudflare Worker. It does not send your Discord ID, profile, playback state, selected track,
-        volume, button activity, environmental-effect settings, country, or precise location.
+        volume, button activity, environmental-effect settings, or precise location. The Activity does not send a country
+        value from the device.
       </p>
       <p>
         The Worker converts the identifier to a keyed HMAC hash before storing it in Cloudflare D1. The database stores
         only that hash, the first and most recent JST usage dates, and whether the same identifier was seen on a later
-        JST date. These records are used only to estimate unique users and the percentage that return on a different day.
-        They represent a browser or Discord WebView storage installation, not a verified individual person.
+        JST date. It also stores pseudonymous daily usage history using the HMAC hash and JST date, so the same stored
+        identifier is counted once per JST day. These records are used only to estimate unique users, the percentage that
+        return on a different day, and daily anonymous usage. Separately, the database stores only a per-day total of
+        accepted usage events. Multiple launches by the same stored identifier on one day each add to that daily total,
+        but no individual event history or event timestamp is stored. These records represent a browser or Discord
+        WebView storage installation, not a verified individual person.
       </p>
 
       <h2>4. Hosting and Network Information</h2>
@@ -131,6 +136,13 @@
         KMC Apps does not copy this technical request information into its anonymous usage database. Infrastructure
         providers determine their own technical logging and retention practices under their agreements and privacy
         policies.
+      </p>
+      <p>
+        For anonymous country-level usage statistics, the Cloudflare Worker may use the two-letter country code that
+        Cloudflare derives from a request (for example, <code>JP</code> or <code>US</code>). KMC Apps stores that country
+        code with the pseudonymous daily usage history; it does not store raw IP addresses, User-Agent values, Discord
+        IDs or usernames, email addresses, or precise location in the anonymous usage database. If no valid country code
+        is available, the usage may be recorded as unknown.
       </p>
 
       <h2>5. Third-Party Services</h2>
@@ -154,10 +166,17 @@
       <h2>6. Retention and Deletion</h2>
       <p>
         Anonymous usage records are retained until the stored identifier has not been seen for more than one year, based
-        on JST dates, and are then deleted by a scheduled cleanup. The reported unique-user total is therefore an
-        approximate rolling one-year total, not a permanent lifetime count. In-memory playback state ends when the page
-        or Activity process is closed. The local anonymous identifier remains until site data is cleared or storage is
-        otherwise reset.
+        on JST dates, and are then deleted by a scheduled cleanup. Pseudonymous daily usage history and associated
+        country codes, and daily aggregate usage totals are also retained for a rolling one-year period and then deleted.
+        The reported unique-user total is therefore an approximate rolling one-year total, not a permanent lifetime
+        count. In-memory playback state ends when the page or Activity process is closed. The local anonymous identifier
+        remains until site data is cleared or storage is otherwise reset.
+      </p>
+      <p>
+        Daily and country-level statistics are available only for usage recorded after those analytics features are
+        introduced; Lofi-Kawaii does not reconstruct missing historical daily or country information. During a reporting
+        period, one anonymous installation may be observed in more than one country, so country totals may add up to more
+        than the overall unique-user total.
       </p>
       <p>
         Lofi-Kawaii does not add an opt-out control to the player interface. If you do not want future launches included

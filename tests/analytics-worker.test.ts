@@ -3,27 +3,42 @@ import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 
-import worker, { getJstDate, handleAnalyticsRequest, purgeExpiredUsers } from '../worker/src/index.ts';
+import worker, { getJstDate, handleAdminRequest, handleAnalyticsRequest, purgeExpiredUsers } from '../worker/src/index.ts';
 
 const ORIGIN = 'https://123456789012345678.discordsays.com';
 const FIRST_ID = '11111111-1111-4111-8111-111111111111';
 const SECOND_ID = '22222222-2222-4222-8222-222222222222';
 const THIRD_ID = '33333333-3333-4333-8333-333333333333';
+const FOURTH_ID = '44444444-4444-4444-8444-444444444444';
+const FIFTH_ID = '55555555-5555-4555-8555-555555555555';
 const TEST_ADMIN_SECRET = 'test-only-admin-secret'.padEnd(64, 'x');
 
 function createDatabase() {
   const sqlite = new DatabaseSync(':memory:');
   const migration = readFileSync(new URL('../worker/migrations/0001_create_anonymous_users.sql', import.meta.url), 'utf8');
   sqlite.exec(migration);
+  const dailyMigration = readFileSync(new URL('../worker/migrations/0002_create_anonymous_user_daily.sql', import.meta.url), 'utf8');
+  sqlite.exec(dailyMigration);
 
   const queries: string[] = [];
   let runCount = 0;
+  let batchCount = 0;
+  let batchSuccess = true;
 
   return {
     sqlite,
     queries,
     get runCount() {
       return runCount;
+    },
+    get batchCount() {
+      return batchCount;
+    },
+    get batchSuccess() {
+      return batchSuccess;
+    },
+    set batchSuccess(value: boolean) {
+      batchSuccess = value;
     },
     d1: {
       prepare(sql: string) {
@@ -40,9 +55,17 @@ function createDatabase() {
                 statement.run(...values);
                 return { success: true };
               },
+              async all() {
+                return { results: statement.all(...values) };
+              },
             };
           },
         };
+      },
+      async batch(statements: Array<{ run(): Promise<{ success: boolean }> }>) {
+        batchCount += 1;
+        if (!batchSuccess) return statements.map(() => ({ success: false }));
+        return Promise.all(statements.map((statement) => statement.run()));
       },
     },
   };
@@ -81,16 +104,142 @@ function createAdminRequest(path = '/admin', method = 'GET', authorization?: str
   return new Request(`https://analytics.example${path}`, { method, headers });
 }
 
-function createRequest(anonymousId: string, overrides: { method?: string; origin?: string; contentType?: string } = {}) {
-  return new Request('https://analytics.example/analytics/visit', {
+function createRequest(
+  anonymousId: string,
+  overrides: { method?: string; origin?: string; contentType?: string; country?: string; countryHeader?: string } = {},
+) {
+  const request = new Request('https://analytics.example/analytics/visit', {
     method: overrides.method ?? 'POST',
     headers: {
       Origin: overrides.origin ?? ORIGIN,
       'Content-Type': overrides.contentType ?? 'application/json',
+      ...(overrides.countryHeader ? { 'CF-IPCountry': overrides.countryHeader } : {}),
     },
     body: overrides.method === 'GET' ? undefined : JSON.stringify({ anonymousId }),
   });
+  if (overrides.country !== undefined) Object.defineProperty(request, 'cf', { value: { country: overrides.country } });
+  return request;
 }
+
+test('daily migration creates the privacy-minimal deduplicated table, country index, and aggregate-only usage counter', () => {
+  const sqlite = new DatabaseSync(':memory:');
+  const migration = readFileSync(new URL('../worker/migrations/0002_create_anonymous_user_daily.sql', import.meta.url), 'utf8');
+  sqlite.exec(migration);
+
+  const table = sqlite.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'anonymous_user_daily'").get();
+  assert.match(String(table.sql), /PRIMARY KEY\s*\(usage_date,\s*id_hash\)/i);
+  assert.match(String(table.sql), /WITHOUT ROWID/i);
+  assert.match(String(table.sql), /country_code TEXT NOT NULL DEFAULT 'ZZ'/i);
+  const indexes = sqlite.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'anonymous_user_daily'").all();
+  assert.deepEqual(indexes.map((row) => row.name), ['anonymous_user_daily_country_date_idx']);
+
+  const totalTable = sqlite.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'anonymous_daily_usage'").get();
+  assert.match(String(totalTable.sql), /usage_date TEXT NOT NULL PRIMARY KEY/i);
+  assert.match(String(totalTable.sql), /total_visits INTEGER NOT NULL DEFAULT 0/i);
+  assert.doesNotMatch(String(totalTable.sql), /id_hash|country_code|timestamp|user_agent|ip/i);
+});
+
+test('same anonymous user and JST day is one daily user and keeps the first country', async () => {
+  const database = createDatabase();
+  const env = createEnv(database.d1);
+  const now = new Date('2026-08-31T02:00:00Z');
+
+  assert.equal((await handleAnalyticsRequest(createRequest(FIRST_ID, { country: 'JP' }), env, now)).status, 204);
+  assert.equal((await handleAnalyticsRequest(createRequest(FIRST_ID, { country: 'US' }), env, now)).status, 204);
+
+  const rows = database.sqlite.prepare('SELECT usage_date, country_code FROM anonymous_user_daily').all();
+  assert.deepEqual(rows.map((row) => ({ usage_date: row.usage_date, country_code: row.country_code })), [{ usage_date: '2026-08-31', country_code: 'JP' }]);
+});
+
+test('daily unique counts include one row per anonymous user on each JST day', async () => {
+  const database = createDatabase();
+  const env = createEnv(database.d1);
+
+  await handleAnalyticsRequest(createRequest(FIRST_ID, { country: 'JP' }), env, new Date('2026-08-31T02:00:00Z'));
+  await handleAnalyticsRequest(createRequest(FIRST_ID, { country: 'JP' }), env, new Date('2026-09-01T02:00:00Z'));
+  await handleAnalyticsRequest(createRequest(SECOND_ID, { country: 'SG' }), env, new Date('2026-08-31T03:00:00Z'));
+
+  const rows = database.sqlite
+    .prepare('SELECT usage_date, COUNT(*) AS unique_users FROM anonymous_user_daily GROUP BY usage_date ORDER BY usage_date')
+    .all();
+  assert.deepEqual(rows.map((row) => ({ usage_date: row.usage_date, unique_users: row.unique_users })), [
+    { usage_date: '2026-08-31', unique_users: 2 },
+    { usage_date: '2026-09-01', unique_users: 1 },
+  ]);
+});
+
+test('daily total counts every accepted visit without adding individual visit history', async () => {
+  const database = createDatabase();
+  const env = createEnv(database.d1);
+  const dayOne = new Date('2026-08-31T02:00:00Z');
+  const dayTwo = new Date('2026-09-01T02:00:00Z');
+
+  await handleAnalyticsRequest(createRequest(FIRST_ID, { country: 'JP' }), env, dayOne);
+  await handleAnalyticsRequest(createRequest(FIRST_ID, { country: 'JP' }), env, dayOne);
+  await handleAnalyticsRequest(createRequest(FIRST_ID, { country: 'JP' }), env, dayOne);
+  await handleAnalyticsRequest(createRequest(SECOND_ID, { country: 'US' }), env, dayOne);
+  await handleAnalyticsRequest(createRequest(SECOND_ID, { country: 'US' }), env, dayOne);
+  await handleAnalyticsRequest(createRequest(THIRD_ID, { country: 'SG' }), env, dayOne);
+  await handleAnalyticsRequest(createRequest(FIRST_ID, { country: 'JP' }), env, dayTwo);
+
+  const totals = database.sqlite.prepare('SELECT usage_date, total_visits FROM anonymous_daily_usage ORDER BY usage_date').all();
+  assert.deepEqual(totals.map((row) => ({ usage_date: row.usage_date, total_visits: row.total_visits })), [
+    { usage_date: '2026-08-31', total_visits: 6 },
+    { usage_date: '2026-09-01', total_visits: 1 },
+  ]);
+  const unique = database.sqlite.prepare('SELECT usage_date, COUNT(*) AS unique_users FROM anonymous_user_daily GROUP BY usage_date ORDER BY usage_date').all();
+  assert.deepEqual(unique.map((row) => ({ usage_date: row.usage_date, unique_users: row.unique_users })), [
+    { usage_date: '2026-08-31', unique_users: 3 },
+    { usage_date: '2026-09-01', unique_users: 1 },
+  ]);
+});
+
+test('country header is ignored and missing or invalid Cloudflare country becomes Unknown', async () => {
+  const database = createDatabase();
+  const env = createEnv(database.d1);
+
+  await handleAnalyticsRequest(createRequest(FIRST_ID, { countryHeader: 'US' }), env, new Date('2026-08-31T02:00:00Z'));
+  await handleAnalyticsRequest(createRequest(SECOND_ID, { country: 'usa' }), env, new Date('2026-08-31T02:00:00Z'));
+  await handleAnalyticsRequest(createRequest(THIRD_ID, { country: 'XX' }), env, new Date('2026-08-31T02:00:00Z'));
+  await handleAnalyticsRequest(createRequest(FOURTH_ID, { country: 'T1' }), env, new Date('2026-08-31T02:00:00Z'));
+  await handleAnalyticsRequest(createRequest(FIFTH_ID, { country: 'jp' }), env, new Date('2026-08-31T02:00:00Z'));
+
+  const rows = database.sqlite.prepare('SELECT country_code FROM anonymous_user_daily ORDER BY id_hash').all();
+  assert.deepEqual(rows.map((row) => row.country_code), ['ZZ', 'ZZ', 'ZZ', 'ZZ', 'ZZ']);
+});
+
+test('admin stats return the last 30 JST days with zeros and distinct country users', async () => {
+  const database = createDatabase();
+  const env = createEnv(database.d1);
+  await handleAnalyticsRequest(createRequest(FIRST_ID, { country: 'JP' }), env, new Date('2026-08-31T02:00:00Z'));
+  await handleAnalyticsRequest(createRequest(SECOND_ID, { country: 'SG' }), env, new Date('2026-08-31T03:00:00Z'));
+  await handleAnalyticsRequest(createRequest(FIRST_ID, { country: 'US' }), env, new Date('2026-09-01T02:00:00Z'));
+  await handleAnalyticsRequest(createRequest(SECOND_ID, { country: 'SG' }), env, new Date('2026-09-01T03:00:00Z'));
+
+  const response = await handleAdminRequest(
+    createAdminRequest('/admin/stats', 'GET', `Bearer ${TEST_ADMIN_SECRET}`),
+    env,
+    new Date('2026-09-12T02:00:00Z'),
+  );
+  assert.equal(response.status, 200);
+  const stats = await response.json();
+  assert.equal(stats.daily_unique.length, 30);
+  assert.deepEqual(stats.daily_unique[0], { date: '2026-08-14', unique_users: 0 });
+  assert.deepEqual(stats.daily_unique.at(-1), { date: '2026-09-12', unique_users: 0 });
+  assert.deepEqual(stats.daily_unique.find((item) => item.date === '2026-08-31'), { date: '2026-08-31', unique_users: 2 });
+  assert.deepEqual(stats.daily_unique.find((item) => item.date === '2026-09-01'), { date: '2026-09-01', unique_users: 2 });
+  assert.equal(stats.daily_total.length, 30);
+  assert.deepEqual(stats.daily_total[0], { date: '2026-08-14', total_visits: 0 });
+  assert.deepEqual(stats.daily_total.find((item) => item.date === '2026-08-31'), { date: '2026-08-31', total_visits: 2 });
+  assert.deepEqual(stats.daily_total.find((item) => item.date === '2026-09-01'), { date: '2026-09-01', total_visits: 2 });
+  assert.equal(stats.measurement_started_on, '2026-09-01');
+  assert.deepEqual(stats.country_unique, [
+    { country_code: 'JP', unique_users: 1 },
+    { country_code: 'SG', unique_users: 1 },
+    { country_code: 'US', unique_users: 1 },
+  ]);
+  assert.doesNotMatch(JSON.stringify(stats), /id_hash|anonymousId/i);
+});
 
 test('JST date changes at 15:00 UTC and never trusts a client date', () => {
   assert.equal(getJstDate(new Date('2026-08-31T14:59:59.999Z')), '2026-08-31');
@@ -156,6 +305,10 @@ test('daily retention cleanup removes rows older than one JST calendar year', as
 
   const rows = database.sqlite.prepare('SELECT first_seen_date FROM anonymous_users ORDER BY first_seen_date').all();
   assert.deepEqual(rows.map((row) => row.first_seen_date), ['2025-08-31', '2026-08-31']);
+  const dailyRows = database.sqlite.prepare('SELECT usage_date FROM anonymous_user_daily ORDER BY usage_date').all();
+  assert.deepEqual(dailyRows.map((row) => row.usage_date), ['2025-08-31', '2026-08-31']);
+  const totalRows = database.sqlite.prepare('SELECT usage_date FROM anonymous_daily_usage ORDER BY usage_date').all();
+  assert.deepEqual(totalRows.map((row) => row.usage_date), ['2025-08-31', '2026-08-31']);
 });
 
 test('scheduled handler runs the one-year retention cleanup', async () => {
@@ -172,6 +325,8 @@ test('scheduled handler runs the one-year retention cleanup', async () => {
   await cleanup;
 
   assert.equal(database.sqlite.prepare('SELECT COUNT(*) AS total FROM anonymous_users').get().total, 0);
+  assert.equal(database.sqlite.prepare('SELECT COUNT(*) AS total FROM anonymous_user_daily').get().total, 0);
+  assert.equal(database.sqlite.prepare('SELECT COUNT(*) AS total FROM anonymous_daily_usage').get().total, 0);
 });
 
 test('method, origin, content type, body shape, and rate limit are enforced before D1', async () => {
@@ -315,6 +470,18 @@ test('admin page is a public fixed shell that requests the secret without queryi
   assert.match(html, /管理用Secret/);
   assert.match(html, /表示/);
   assert.match(html, /最終更新/);
+  assert.match(html, /id="daily-chart"/);
+  assert.match(html, /今日のユニーク利用/);
+  assert.match(html, /今日の総利用回数/);
+  assert.match(html, /daily_total/);
+  assert.match(html, /計測開始日/);
+  assert.match(html, /measurement_started_on/);
+  assert.match(html, /id="country-chart"/);
+  assert.match(html, /Unknown/);
+  assert.match(html, /svg \{[^}]*height: auto;/);
+  assert.match(html, /const chartHeight = Math\.max\(220, 36 \+ countries\.length \* 30\)/);
+  assert.match(html, /countryChart\.setAttribute\('viewBox', '0 0 600 ' \+ chartHeight\)/);
+  assert.match(html, /countryChart\.setAttribute\('height', String\(chartHeight\)\)/);
   assert.match(html, /Authorization/);
   assert.match(html, /credentials:\s*'omit'/);
   assert.doesNotMatch(html, /localStorage|sessionStorage|document\.cookie|id_hash|ADMIN_EMAIL|ANALYTICS_HMAC_SECRET|owner@example\.com/);
@@ -333,15 +500,20 @@ test('matching Bearer secret returns aggregate-only zero state without D1 writes
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('Cache-Control'), 'private, no-store');
   assert.equal(response.headers.get('Access-Control-Allow-Origin'), null);
-  assert.deepEqual(await response.json(), {
-    total_unique: 0,
-    returning_users: 0,
-    returning_rate_percent: 0,
-  });
+  const zeroStats = await response.json();
+  assert.deepEqual(
+    { total_unique: zeroStats.total_unique, returning_users: zeroStats.returning_users, returning_rate_percent: zeroStats.returning_rate_percent },
+    { total_unique: 0, returning_users: 0, returning_rate_percent: 0 },
+  );
+  assert.equal(zeroStats.daily_unique.length, 30);
+  assert.equal(zeroStats.daily_total.length, 30);
+  assert.equal(zeroStats.daily_total.at(-1).total_visits, 0);
+  assert.equal(zeroStats.measurement_started_on, '2026-09-01');
+  assert.deepEqual(zeroStats.country_unique, []);
   assert.deepEqual(adminRateLimitKeys, ['admin:203.0.113.7']);
   assert.equal(database.runCount, 0);
-  assert.equal(database.queries.length, 1);
-  assert.doesNotMatch(database.queries[0], /id_hash|INSERT|UPDATE|DELETE/i);
+  assert.equal(database.queries.length, 4);
+  assert.equal(database.queries.some((query) => /INSERT|UPDATE|DELETE/i.test(query)), false);
 });
 
 test('matching Bearer secret returns the SQL-calculated rate from one aggregate row only', async () => {
@@ -360,14 +532,18 @@ test('matching Bearer secret returns the SQL-calculated rate from one aggregate 
   );
 
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), {
-    total_unique: 2,
-    returning_users: 1,
-    returning_rate_percent: 50,
-  });
+  const stats = await response.json();
+  assert.deepEqual(
+    { total_unique: stats.total_unique, returning_users: stats.returning_users, returning_rate_percent: stats.returning_rate_percent },
+    { total_unique: 2, returning_users: 1, returning_rate_percent: 50 },
+  );
+  assert.equal(stats.daily_unique.length, 30);
+  assert.equal(stats.daily_total.length, 30);
+  assert.equal(stats.measurement_started_on, '2026-09-01');
+  assert.deepEqual(stats.country_unique, [{ country_code: 'ZZ', unique_users: 2 }]);
   assert.equal(database.runCount, writesBeforeStats);
-  assert.equal(database.queries.length, 1);
-  assert.doesNotMatch(database.queries[0], /id_hash|INSERT|UPDATE|DELETE/i);
+  assert.equal(database.queries.length, 4);
+  assert.equal(database.queries.some((query) => /INSERT|UPDATE|DELETE/i.test(query)), false);
 });
 
 test('admin routes accept GET only and do not alter the public analytics route contract', async () => {
@@ -382,6 +558,19 @@ test('admin routes accept GET only and do not alter the public analytics route c
   assert.equal((await worker.fetch(createRequest(FIRST_ID, { method: 'GET' }), env)).status, 405);
   assert.equal((await worker.fetch(createRequest(FIRST_ID), env)).status, 204);
   assert.equal(database.sqlite.prepare('SELECT COUNT(*) AS total FROM anonymous_users').get().total, 1);
+});
+
+test('analytics visit returns a safe failure and writes nothing when D1 batch fails', async () => {
+  const database = createDatabase();
+  database.batchSuccess = false;
+  const env = createEnv(database.d1);
+
+  const response = await handleAnalyticsRequest(createRequest(FIRST_ID, { country: 'JP' }), env, new Date('2026-08-31T02:00:00Z'));
+
+  assert.equal(response.status, 503);
+  assert.equal(database.batchCount, 1);
+  assert.equal(database.sqlite.prepare('SELECT COUNT(*) AS total FROM anonymous_users').get().total, 0);
+  assert.equal(database.sqlite.prepare('SELECT COUNT(*) AS total FROM anonymous_user_daily').get().total, 0);
 });
 
 test('admin D1 failures remain private and reveal no internal error details', async () => {
