@@ -6,31 +6,43 @@ export const BACKGROUND_DEFINITIONS = [
     id: DEFAULT_BACKGROUND_ID,
     label: 'Moonlit Room',
     fileName: 'images/03_lofi-background.png',
+    tone: 'night',
+    allowsAmbientEffects: true,
   },
   {
     id: 'background-1',
     label: 'Sunset Room',
     fileName: 'images/backgrounds/01_lofi-background-01.png',
+    tone: 'night',
+    allowsAmbientEffects: true,
   },
   {
     id: 'background-2',
     label: 'Starry Lake',
     fileName: 'images/backgrounds/02_lofi-background-10.png',
+    tone: 'night',
+    allowsAmbientEffects: true,
   },
   {
     id: 'background-3',
     label: 'Sunny Lake',
     fileName: 'images/backgrounds/lofi-background-02.png',
+    tone: 'day',
+    allowsAmbientEffects: false,
   },
   {
     id: 'background-4',
     label: 'Lighthouse Coast',
     fileName: 'images/backgrounds/lofi-background-07.png',
+    tone: 'day',
+    allowsAmbientEffects: false,
   },
   {
     id: 'background-5',
     label: 'Cherry Blossom Lake',
     fileName: 'images/backgrounds/lofi-background-09.png',
+    tone: 'day',
+    allowsAmbientEffects: false,
   },
 ] as const;
 

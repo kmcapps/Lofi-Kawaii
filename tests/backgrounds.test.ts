@@ -43,6 +43,24 @@ test('background catalog contains the current default plus five unique selectabl
   }
 });
 
+test('background presentation keeps night effects off daytime scenes', () => {
+  assert.deepEqual(
+    BACKGROUND_DEFINITIONS.map((background) => [
+      background.id,
+      background.tone,
+      background.allowsAmbientEffects,
+    ]),
+    [
+      ['background-0', 'night', true],
+      ['background-1', 'night', true],
+      ['background-2', 'night', true],
+      ['background-3', 'day', false],
+      ['background-4', 'day', false],
+      ['background-5', 'day', false],
+    ],
+  );
+});
+
 test('runtime backgrounds use the configured base URL without changing stable IDs', () => {
   const backgrounds = createBackgrounds('/Lofi-Kawaii/', 'https://kmcapps.github.io/');
   assert.equal(

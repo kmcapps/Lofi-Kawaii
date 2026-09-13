@@ -244,6 +244,8 @@ function setBackground(backgroundId: BackgroundId, persist = true) {
     ? saveBackgroundId(favoritesStorage, background.id)
     : background.id;
   document.documentElement.style.setProperty('--background-image', `url("${background.source}")`);
+  document.documentElement.dataset.backgroundTone = background.tone;
+  document.documentElement.dataset.backgroundEffects = background.allowsAmbientEffects ? 'on' : 'off';
 
   for (const button of backgroundList.querySelectorAll<HTMLButtonElement>('[data-background-id]')) {
     const isSelected = button.dataset.backgroundId === activeBackgroundId;
