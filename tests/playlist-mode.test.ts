@@ -41,3 +41,33 @@ test('movement stays sequential inside the selected playlist mode', () => {
   assert.equal(moveWithinPlaylist(22, -1, 'fantasy'), 21);
   assert.equal(moveWithinPlaylist(37, 1, 'japanese'), 38);
 });
+
+test('an empty favorites playlist has no first or movable track', () => {
+  assert.equal(firstTrackIndex('favorites', []), null);
+  assert.equal(moveWithinPlaylist(12, 1, 'favorites', []), null);
+  assert.equal(moveWithinPlaylist(12, -1, 'favorites', []), null);
+});
+
+test('a single favorite cycles to itself in both directions', () => {
+  assert.equal(firstTrackIndex('favorites', [12]), 12);
+  assert.equal(moveWithinPlaylist(12, 1, 'favorites', [12]), 12);
+  assert.equal(moveWithinPlaylist(12, -1, 'favorites', [12]), 12);
+});
+
+test('favorites move in catalog order and wrap at both ends', () => {
+  const favoriteIndices = [2, 7, 19, 41];
+
+  assert.equal(moveWithinPlaylist(2, 1, 'favorites', favoriteIndices), 7);
+  assert.equal(moveWithinPlaylist(19, -1, 'favorites', favoriteIndices), 7);
+  assert.equal(moveWithinPlaylist(41, 1, 'favorites', favoriteIndices), 2);
+  assert.equal(moveWithinPlaylist(2, -1, 'favorites', favoriteIndices), 41);
+});
+
+test('favorites choose the nearest track in the requested direction when current is not a favorite', () => {
+  const favoriteIndices = [2, 7, 19, 41];
+
+  assert.equal(moveWithinPlaylist(12, 1, 'favorites', favoriteIndices), 19);
+  assert.equal(moveWithinPlaylist(12, -1, 'favorites', favoriteIndices), 7);
+  assert.equal(moveWithinPlaylist(43, 1, 'favorites', favoriteIndices), 2);
+  assert.equal(moveWithinPlaylist(1, -1, 'favorites', favoriteIndices), 41);
+});

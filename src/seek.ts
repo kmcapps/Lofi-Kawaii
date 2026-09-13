@@ -5,6 +5,7 @@ export const SEEK_THEME_BY_MODE: Record<PlaylistMode, PlaylistMode> = {
   chill: 'chill',
   fantasy: 'fantasy',
   japanese: 'japanese',
+  favorites: 'all',
 };
 
 export function formatPlaybackTime(seconds: number) {

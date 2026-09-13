@@ -40,5 +40,6 @@ test('each playlist mode has a matching seek bar theme', () => {
     chill: 'chill',
     fantasy: 'fantasy',
     japanese: 'japanese',
+    favorites: 'all',
   });
 });

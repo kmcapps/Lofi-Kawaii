@@ -89,7 +89,7 @@
         <li>use cookies, sessionStorage, or IndexedDB;</li>
         <li>use advertising, tracking pixels, cross-service tracking, or behavioral telemetry;</li>
         <li>operate a KMC Apps account system or profile database; or</li>
-        <li>save user input, playback history, track selection, or volume preferences.</li>
+        <li>save user input, playback history, current track selection, or volume preferences in a KMC Apps database.</li>
       </ul>
 
       <h2>3. Information Processed on Your Device</h2>
@@ -97,6 +97,13 @@
       <p>
         Track selection, play/pause state, and volume are handled in memory on your device. They are not transmitted to
         a KMC Apps server and reset when the Activity is reloaded or closed.
+      </p>
+
+      <h3>Favorite tracks</h3>
+      <p>
+        Favorite track selections are stored only in localStorage on your device so they remain available after reloads.
+        They use Lofi-Kawaii track identifiers, are not sent to a KMC Apps server, and can be removed by clearing this
+        Activity's site data.
       </p>
 
       <h3>Discord SDK connection</h3>

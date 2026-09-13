@@ -61,3 +61,37 @@ html[data-ambient-effects='on'] .glow-two::after { animation: lantern-aura-breat
 .resize-handle:hover, .resize-handle:focus-visible { filter: brightness(1.16) drop-shadow(0 0 4px rgb(239 236 255 / 40%)); }
 .player-panel.is-resizing .resize-handle { filter: brightness(1.24) drop-shadow(0 0 5px rgb(232 228 255 / 48%)); }
 .resize-handle:focus-visible { outline-color: rgb(235 230 255 / 76%); }
+.library-actions { display: grid; width: min(var(--panel-title-width), calc(100vw - 24px)); grid-template-columns: repeat(2, minmax(0, 1fr)); gap: max(3px, var(--panel-mode-gap)); }
+.library-action { width: 100%; }
+.playlist-mode:disabled { cursor: default; opacity: .46; }
+.playlist-mode:disabled:hover { border-color: rgb(221 200 255 / 34%); color: rgb(238 232 243 / 70%); }
+#favorite-count { font-variant-numeric: tabular-nums; }
+.track-list-dialog { width: min(440px, calc(100vw - 24px)); max-width: none; max-height: min(78vh, 720px); padding: 0; overflow: hidden; border: 1px solid rgb(220 200 255 / 56%); border-radius: 20px; background: rgb(9 13 29 / 88%); color: #fff8fc; box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%), 0 18px 52px rgb(0 0 0 / 46%), 0 0 18px rgb(191 205 255 / 16%); backdrop-filter: blur(16px); }
+.track-list-dialog::backdrop { background: rgb(4 6 18 / 56%); backdrop-filter: blur(2px); }
+.track-list-card { display: grid; max-height: min(78vh, 720px); grid-template-rows: auto auto minmax(0, 1fr); }
+.track-list-header { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding: 18px 18px 12px; border-bottom: 1px solid rgb(221 200 255 / 20%); background: linear-gradient(135deg, rgb(255 181 225 / 8%), rgb(171 238 255 / 6%)); }
+.track-list-header h2, .track-list-header p { margin: 0; }
+.track-list-header h2 { font-size: 1.08rem; }
+.track-list-header p { margin-top: 4px; color: rgb(230 222 239 / 70%); font-size: .72rem; }
+.track-list-close { display: grid; width: 32px; height: 32px; flex: none; place-items: center; padding: 0; border: 1px solid rgb(221 200 255 / 38%); border-radius: 50%; background: rgb(255 255 255 / 5%); color: #fff8fc; cursor: pointer; font-size: 1.15rem; line-height: 1; }
+.track-list-close:hover { border-color: rgb(187 245 255 / 64%); background: rgb(255 255 255 / 10%); }
+.track-list-close:focus-visible, .track-select:focus-visible, .favorite-toggle:focus-visible { outline: 2px solid rgb(221 200 255 / 88%); outline-offset: 2px; }
+.favorites-empty { margin: 0; padding: 10px 18px; color: rgb(255 214 237 / 82%); font-size: .76rem; text-align: center; }
+.favorites-empty[hidden] { display: none; }
+.track-list { display: grid; gap: 5px; padding: 10px; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: rgb(211 186 255 / 44%) transparent; }
+.track-row { display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr) 38px; align-items: center; gap: 6px; border: 1px solid transparent; border-radius: 12px; background: rgb(255 255 255 / 3%); }
+.track-row:hover { background: rgb(255 255 255 / 6%); }
+.track-row.is-current { border-color: rgb(190 226 255 / 44%); background: linear-gradient(135deg, rgb(255 181 225 / 9%), rgb(171 238 255 / 8%)); box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%); }
+.track-select, .favorite-toggle { border: 0; background: transparent; color: inherit; cursor: pointer; }
+.track-select { min-width: 0; padding: 10px 8px 10px 12px; overflow: hidden; font: inherit; font-size: .82rem; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+.track-row.is-current .track-select { color: #fff; font-weight: 650; }
+.favorite-toggle { display: grid; width: 34px; height: 34px; place-items: center; padding: 0; border-radius: 50%; color: rgb(241 222 238 / 72%); font-size: 1.18rem; }
+.favorite-toggle:hover { background: rgb(255 255 255 / 8%); color: #ffd2ea; }
+.favorite-toggle.is-favorite { color: #ffaad4; text-shadow: 0 0 8px rgb(255 158 207 / 40%); }
+@media (max-width: 520px) {
+  .track-list-dialog { width: calc(100vw - 16px); max-height: min(82vh, 680px); border-radius: 18px; }
+  .track-list-card { max-height: min(82vh, 680px); }
+  .track-list-header { padding: 14px 14px 10px; }
+  .track-list { padding: 8px; }
+  .track-select { font-size: .78rem; }
+}

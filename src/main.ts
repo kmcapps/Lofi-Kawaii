@@ -11,197 +11,15 @@ import {
   seekProgress,
   SEEK_THEME_BY_MODE,
 } from './seek';
-
-type Track = {
-  title: string;
-  source: string;
-};
+import {
+  loadFavoriteTrackIds,
+  saveFavoriteTrackIds,
+  toggleFavoriteTrackId,
+} from './favorites';
+import { createTracks } from './tracks';
 
 const audioBaseUrl = `${import.meta.env.BASE_URL}audio/`;
-
-const tracks: Track[] = [
-  {
-    title: 'Quiet Motion',
-    source: `${audioBaseUrl}01_Quiet_Motion_v2_96BPM.mp3`,
-  },
-  {
-    title: 'Music Box Stroll',
-    source: `${audioBaseUrl}02_Music_Box_Stroll_v4_MusicBox005_84BPM.mp3`,
-  },
-  {
-    title: 'Moonlit Waterside Room',
-    source: `${audioBaseUrl}03_Moonlit_Waterside_Room_v6_77BPM.mp3`,
-  },
-  {
-    title: 'Variant A Six Eight Nocturne',
-    source: `${audioBaseUrl}04_Variant_A_SixEight_Nocturne_72BPM.mp3`,
-  },
-  {
-    title: 'Variant D Night Waltz',
-    source: `${audioBaseUrl}05_Variant_D_Night_Waltz_90BPM.mp3`,
-  },
-  {
-    title: 'Still Lake Morning',
-    source: `${audioBaseUrl}06_Still_Lake_Morning.mp3`,
-  },
-  {
-    title: 'Coffee by the Window',
-    source: `${audioBaseUrl}07_Coffee_by_the_Window.mp3`,
-  },
-  {
-    title: 'Blanket and Blue Sky',
-    source: `${audioBaseUrl}08_Blanket_and_Blue_Sky.mp3`,
-  },
-  {
-    title: 'Quiet Ripples',
-    source: `${audioBaseUrl}09_Quiet_Ripples.mp3`,
-  },
-  {
-    title: 'Slow Sunday Light',
-    source: `${audioBaseUrl}10_Slow_Sunday_Light.mp3`,
-  },
-  {
-    title: 'Pillow-side Daydream',
-    source: `${audioBaseUrl}11_Pillow-side_Daydream.mp3`,
-  },
-  {
-    title: 'Cedar Cabin Coffee',
-    source: `${audioBaseUrl}12_Cedar_Cabin_Coffee.mp3`,
-  },
-  {
-    title: 'Clouds Over the Lake',
-    source: `${audioBaseUrl}13_Clouds_Over_the_Lake.mp3`,
-  },
-  {
-    title: 'Afternoon Stillness',
-    source: `${audioBaseUrl}14_Afternoon_Stillness.mp3`,
-  },
-  {
-    title: 'Dusk in Soft Blue',
-    source: `${audioBaseUrl}15_Dusk_in_Soft_Blue.mp3`,
-  },
-  {
-    title: 'Sunlit Stone Avenue',
-    source: `${audioBaseUrl}16_Sunlit_Stone_Avenue_90BPM.mp3`,
-  },
-  {
-    title: 'Arcane Bell Tower',
-    source: `${audioBaseUrl}17_Arcane_Bell_Tower_84BPM.mp3`,
-  },
-  {
-    title: 'Willowmere Harbor',
-    source: `${audioBaseUrl}18_Willowmere_Harbor_86BPM.mp3`,
-  },
-  {
-    title: 'Lanterns of the Old Market',
-    source: `${audioBaseUrl}19_Lanterns_of_the_Old_Market_94BPM.mp3`,
-  },
-  {
-    title: 'Emerald Chapel Garden',
-    source: `${audioBaseUrl}20_Emerald_Chapel_Garden_76BPM.mp3`,
-  },
-  {
-    title: 'Moonwell Academy',
-    source: `${audioBaseUrl}21_Moonwell_Academy_82BPM.mp3`,
-  },
-  {
-    title: 'Rivergate Morning',
-    source: `${audioBaseUrl}22_Rivergate_Morning_92BPM.mp3`,
-  },
-  {
-    title: 'Mistwood Village',
-    source: `${audioBaseUrl}23_Mistwood_Village_78BPM.mp3`,
-  },
-  {
-    title: 'Starlit Alchemist Quarter',
-    source: `${audioBaseUrl}24_Starlit_Alchemist_Quarter_88BPM.mp3`,
-  },
-  {
-    title: 'Golden Fountain Plaza',
-    source: `${audioBaseUrl}25_Golden_Fountain_Plaza_96BPM.mp3`,
-  },
-  {
-    title: 'Whispering Library',
-    source: `${audioBaseUrl}26_Whispering_Library_72BPM.mp3`,
-  },
-  {
-    title: 'Rosebridge Festival',
-    source: `${audioBaseUrl}27_Rosebridge_Festival_102BPM.mp3`,
-  },
-  {
-    title: 'Silverleaf Outskirts',
-    source: `${audioBaseUrl}28_Silverleaf_Outskirts_80BPM.mp3`,
-  },
-  {
-    title: 'Twilight Clockwork Lane',
-    source: `${audioBaseUrl}29_Twilight_Clockwork_Lane_91BPM.mp3`,
-  },
-  {
-    title: 'Homeward Through the Gates',
-    source: `${audioBaseUrl}30_Homeward_Through_the_Gates_86BPM.mp3`,
-  },
-  {
-    title: 'Moonlit Shrine Reverie',
-    source: `${audioBaseUrl}31_Moonlit_Shrine_Reverie.mp3`,
-  },
-  {
-    title: 'Bamboo Flute Moon',
-    source: `${audioBaseUrl}32_Bamboo_Flute_Moon.mp3`,
-  },
-  {
-    title: 'Lantern Path Under the Full Moon',
-    source: `${audioBaseUrl}33_Lantern_Path_Under_the_Full_Moon.mp3`,
-  },
-  {
-    title: 'Moon on Temple Water',
-    source: `${audioBaseUrl}34_Moon_on_Temple_Water.mp3`,
-  },
-  {
-    title: 'Midnight Torii Shamisen',
-    source: `${audioBaseUrl}35_Midnight_Torii_Shamisen.mp3`,
-  },
-  {
-    title: 'Glowing Bamboo Sanctuary',
-    source: `${audioBaseUrl}36_Glowing_Bamboo_Sanctuary.mp3`,
-  },
-  {
-    title: 'Stone Steps at Moonrise',
-    source: `${audioBaseUrl}37_Stone_Steps_at_Moonrise.mp3`,
-  },
-  {
-    title: 'Silver Pagoda Dream',
-    source: `${audioBaseUrl}38_Silver_Pagoda_Dream.mp3`,
-  },
-  {
-    title: 'Bamboo Corridor Groove',
-    source: `${audioBaseUrl}39_Bamboo_Corridor_Groove.mp3`,
-  },
-  {
-    title: 'Fox Shrine Nocturne',
-    source: `${audioBaseUrl}40_Fox_Shrine_Nocturne.mp3`,
-  },
-  {
-    title: 'Starlit Shrine Courtyard',
-    source: `${audioBaseUrl}41_Starlit_Shrine_Courtyard.mp3`,
-  },
-  {
-    title: 'Misty Bamboo Moon',
-    source: `${audioBaseUrl}42_Misty_Bamboo_Moon.mp3`,
-  },
-  {
-    title: 'Afterglow of the Festival',
-    source: `${audioBaseUrl}43_Afterglow_of_the_Festival.mp3`,
-  },
-  {
-    title: 'Blue Moon Forest Shrine',
-    source: `${audioBaseUrl}44_Blue_Moon_Forest_Shrine.mp3`,
-  },
-  {
-    title: 'Dawn Beyond Bamboo',
-    source: `${audioBaseUrl}45_Dawn_Beyond_Bamboo.mp3`,
-  },
-];
-
+const tracks = createTracks(audioBaseUrl);
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('App root was not found.');
 
@@ -218,6 +36,10 @@ app.innerHTML = `
         <button class="playlist-mode" type="button" data-playlist-mode="chill" aria-pressed="false">CHILL</button>
         <button class="playlist-mode" type="button" data-playlist-mode="fantasy" aria-pressed="false">FANTASY</button>
         <button class="playlist-mode" type="button" data-playlist-mode="japanese" aria-pressed="false">JAPANESE</button>
+      </div>
+      <div class="library-actions">
+        <button id="track-list-open" class="playlist-mode library-action" type="button" aria-haspopup="dialog">TRACK LIST</button>
+        <button id="favorites-mode" class="playlist-mode library-action" type="button" data-playlist-mode="favorites" aria-pressed="false" disabled>♡ FAVORITES <span id="favorite-count">0</span></button>
       </div>
       <div class="controls">
         <button id="previous-button" class="previous" type="button" aria-label="前の曲"><span aria-hidden="true">⏮</span></button>
@@ -250,6 +72,19 @@ app.innerHTML = `
       </label>
       <span id="resize-handle" class="resize-handle" role="slider" tabindex="0" aria-label="プレイヤーのサイズを変更" aria-valuemin="50" aria-valuemax="150" aria-valuenow="70"></span>
     </div>
+    <dialog id="track-list-dialog" class="track-list-dialog" aria-labelledby="track-list-heading" aria-live="off">
+      <div class="track-list-card">
+        <header class="track-list-header">
+          <div>
+            <h2 id="track-list-heading">45 TRACKS</h2>
+            <p>Select a track · ♡ Favorite</p>
+          </div>
+          <button id="track-list-close" class="track-list-close" type="button" aria-label="曲一覧を閉じる">×</button>
+        </header>
+        <p id="favorites-empty" class="favorites-empty">No favorite tracks yet</p>
+        <div id="track-list" class="track-list" role="list"></div>
+      </div>
+    </dialog>
   </section>
 `;
 
@@ -266,18 +101,121 @@ const seek = requiredElement<HTMLInputElement>('#seek');
 const currentTime = requiredElement<HTMLSpanElement>('#current-time');
 const durationTime = requiredElement<HTMLSpanElement>('#duration-time');
 const volume = requiredElement<HTMLInputElement>('#volume');
+const trackListOpen = requiredElement<HTMLButtonElement>('#track-list-open');
+const trackListClose = requiredElement<HTMLButtonElement>('#track-list-close');
+const trackListDialog = requiredElement<HTMLDialogElement>('#track-list-dialog');
+const trackList = requiredElement<HTMLDivElement>('#track-list');
+const favoritesModeButton = requiredElement<HTMLButtonElement>('#favorites-mode');
+const favoriteCount = requiredElement<HTMLSpanElement>('#favorite-count');
+const favoritesEmpty = requiredElement<HTMLParagraphElement>('#favorites-empty');
 
 let currentTrackIndex = 0;
 let activePlaylistMode: PlaylistMode = 'all';
 const audio = new Audio();
 audio.autoplay = false;
 audio.volume = Number(volume.value) / 100;
+const catalogTrackIds = tracks.map(({ id }) => id);
+const favoritesStorage = (() => {
+  try {
+    return window.localStorage;
+  } catch {
+    return { getItem: () => null, setItem: () => undefined };
+  }
+})();
+let favoriteTrackIds = loadFavoriteTrackIds(favoritesStorage, catalogTrackIds);
 
 function requiredElement<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
   if (!element) throw new Error(`Missing required element: ${selector}`);
   return element;
 }
+
+function favoriteTrackIndices() {
+  return favoriteTrackIds.map((trackId) => tracks.findIndex((track) => track.id === trackId));
+}
+
+function setActivePlaylistMode(mode: PlaylistMode) {
+  activePlaylistMode = mode;
+  for (const modeButton of playlistModeButtons) {
+    const isActive = modeButton.dataset.playlistMode === mode;
+    modeButton.classList.toggle('is-active', isActive);
+    modeButton.setAttribute('aria-pressed', String(isActive));
+  }
+  seekControl.dataset.theme = SEEK_THEME_BY_MODE[mode];
+}
+
+function updateTrackListState() {
+  favoriteCount.textContent = String(favoriteTrackIds.length);
+  favoritesEmpty.hidden = favoriteTrackIds.length !== 0;
+  favoritesModeButton.disabled = favoriteTrackIds.length === 0;
+
+  for (const row of trackList.querySelectorAll<HTMLElement>('[data-track-id]')) {
+    const trackId = row.dataset.trackId ?? '';
+    const isCurrent = tracks[currentTrackIndex].id === trackId;
+    const isFavorite = favoriteTrackIds.includes(trackId);
+    row.classList.toggle('is-current', isCurrent);
+    const selectButton = row.querySelector<HTMLButtonElement>('.track-select');
+    const favoriteButton = row.querySelector<HTMLButtonElement>('.favorite-toggle');
+    if (selectButton) {
+      if (isCurrent) selectButton.setAttribute('aria-current', 'true');
+      else selectButton.removeAttribute('aria-current');
+    }
+    if (favoriteButton) {
+      favoriteButton.textContent = isFavorite ? '♥' : '♡';
+      favoriteButton.classList.toggle('is-favorite', isFavorite);
+      favoriteButton.setAttribute('aria-pressed', String(isFavorite));
+      favoriteButton.setAttribute('aria-label', `${row.dataset.trackTitle}をお気に入り${isFavorite ? 'から解除' : 'に追加'}`);
+    }
+  }
+}
+
+function renderTrackList() {
+  const fragment = document.createDocumentFragment();
+  tracks.forEach((track, index) => {
+    const row = document.createElement('div');
+    row.className = 'track-row';
+    row.dataset.trackId = track.id;
+    row.dataset.trackTitle = track.title;
+    row.setAttribute('role', 'listitem');
+
+    const selectButton = document.createElement('button');
+    selectButton.className = 'track-select';
+    selectButton.type = 'button';
+    selectButton.textContent = `${String(index + 1).padStart(2, '0')}  ${track.title}`;
+    selectButton.addEventListener('click', () => {
+      const wasPlaying = !audio.paused;
+      setActivePlaylistMode('all');
+      updateTrack(index);
+      if (wasPlaying) void playCurrentTrack();
+      trackListDialog.close();
+    });
+
+    const favoriteButton = document.createElement('button');
+    favoriteButton.className = 'favorite-toggle';
+    favoriteButton.type = 'button';
+    favoriteButton.addEventListener('click', () => {
+      favoriteTrackIds = toggleFavoriteTrackId(favoriteTrackIds, track.id, catalogTrackIds);
+      favoriteTrackIds = saveFavoriteTrackIds(favoritesStorage, favoriteTrackIds, catalogTrackIds);
+      if (favoriteTrackIds.length === 0 && activePlaylistMode === 'favorites') {
+        setActivePlaylistMode('all');
+      }
+      updateTrackListState();
+    });
+
+    row.append(selectButton, favoriteButton);
+    fragment.append(row);
+  });
+  trackList.replaceChildren(fragment);
+  updateTrackListState();
+}
+
+trackListOpen.addEventListener('click', () => {
+  if (!trackListDialog.open) trackListDialog.showModal();
+});
+trackListClose.addEventListener('click', () => trackListDialog.close());
+trackListDialog.addEventListener('click', (event) => {
+  if (event.target === trackListDialog) trackListDialog.close();
+});
 
 const reducedMotionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
 let ambientEffectsEnabled = !reducedMotionPreference.matches;
@@ -493,6 +431,7 @@ function updateTrack(index: number) {
   title.textContent = track.title;
   playButton.textContent = '▶';
   playButton.setAttribute('aria-label', '再生');
+  updateTrackListState();
   window.requestAnimationFrame(() => {
     if (hasUserMovedPanel) clampPanelToViewport();
     else positionPanelAtDefault();
@@ -543,7 +482,14 @@ function pauseCurrentTrack() {
 
 function changeTrack(offset: number) {
   const wasPlaying = !audio.paused;
-  updateTrack(moveWithinPlaylist(currentTrackIndex, offset, activePlaylistMode));
+  const nextTrackIndex = moveWithinPlaylist(
+    currentTrackIndex,
+    offset,
+    activePlaylistMode,
+    favoriteTrackIndices(),
+  );
+  if (nextTrackIndex === null) return;
+  updateTrack(nextTrackIndex);
   if (wasPlaying) void playCurrentTrack();
 }
 
@@ -558,14 +504,11 @@ nextButton.addEventListener('click', () => changeTrack(1));
 
 for (const button of playlistModeButtons) {
   button.addEventListener('click', () => {
-    activePlaylistMode = button.dataset.playlistMode as PlaylistMode;
-    for (const modeButton of playlistModeButtons) {
-      const isActive = modeButton === button;
-      modeButton.classList.toggle('is-active', isActive);
-      modeButton.setAttribute('aria-pressed', String(isActive));
-    }
-    seekControl.dataset.theme = SEEK_THEME_BY_MODE[activePlaylistMode];
-    updateTrack(firstTrackIndex(activePlaylistMode));
+    const nextMode = button.dataset.playlistMode as PlaylistMode;
+    const nextTrackIndex = firstTrackIndex(nextMode, favoriteTrackIndices());
+    if (nextTrackIndex === null) return;
+    setActivePlaylistMode(nextMode);
+    updateTrack(nextTrackIndex);
     void playCurrentTrack();
   });
 }
@@ -584,7 +527,17 @@ audio.addEventListener('durationchange', updateSeekDisplay);
 audio.addEventListener('timeupdate', updateSeekDisplay);
 
 audio.addEventListener('ended', () => {
-  updateTrack(moveWithinPlaylist(currentTrackIndex, 1, activePlaylistMode));
+  const nextTrackIndex = moveWithinPlaylist(
+    currentTrackIndex,
+    1,
+    activePlaylistMode,
+    favoriteTrackIndices(),
+  );
+  if (nextTrackIndex === null) {
+    pauseCurrentTrack();
+    return;
+  }
+  updateTrack(nextTrackIndex);
   void playCurrentTrack();
 });
 
@@ -608,6 +561,7 @@ async function connectToDiscord() {
   } catch {}
 }
 
+renderTrackList();
 updateTrack(0);
 recordAnonymousLaunch();
 void connectToDiscord();
