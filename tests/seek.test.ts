@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import test from 'node:test';
 
 import {
@@ -42,4 +44,15 @@ test('each playlist mode has a matching seek bar theme', () => {
     japanese: 'japanese',
     favorites: 'all',
   });
+});
+
+test('ALL and JAPANESE seek thumbs keep their motifs without an opaque base fill', async () => {
+  const styleSource = await readFile(path.join(process.cwd(), 'src', 'style.css'), 'utf8');
+  const allTheme = [...styleSource.matchAll(/\.seek-control \{([\s\S]*?)\}/g)].at(-1);
+  const japaneseTheme = [...styleSource.matchAll(/\.seek-control\[data-theme="japanese"\] \{([\s\S]*?)\}/g)].at(-1);
+
+  assert.ok(allTheme);
+  assert.ok(japaneseTheme);
+  assert.match(allTheme[1], /--seek-thumb:[\s\S]*transparent;/);
+  assert.match(japaneseTheme[1], /--seek-thumb:[\s\S]*transparent;/);
 });

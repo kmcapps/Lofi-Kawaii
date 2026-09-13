@@ -17,14 +17,29 @@ import {
   toggleFavoriteTrackId,
 } from './favorites';
 import { createTracks } from './tracks';
+import {
+  createBackgrounds,
+  loadBackgroundId,
+  saveBackgroundId,
+  type BackgroundId,
+} from './backgrounds';
 
 const audioBaseUrl = `${import.meta.env.BASE_URL}audio/`;
 const tracks = createTracks(audioBaseUrl);
+const backgrounds = createBackgrounds(import.meta.env.BASE_URL);
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('App root was not found.');
 
 app.innerHTML = `
   <section class="player" aria-label="Lofi music player">
+    <button id="background-open" class="background-launcher" type="button" aria-haspopup="dialog" aria-label="背景を選択" title="BACKGROUND">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="3.5" y="4" width="17" height="16" rx="3"></rect>
+        <path d="m6.5 16 4-4 2.75 2.75 2-2L18 16"></path>
+        <circle cx="9" cy="8.5" r="1.2"></circle>
+      </svg>
+      <span>BACKGROUND</span>
+    </button>
     <div class="steam-layer" aria-hidden="true">
       <span class="steam-wisp"></span>
     </div>
@@ -85,6 +100,15 @@ app.innerHTML = `
         <div id="track-list" class="track-list" role="list"></div>
       </div>
     </dialog>
+    <dialog id="background-dialog" class="background-dialog" aria-labelledby="background-heading">
+      <div class="background-card">
+        <header class="background-header">
+          <h2 id="background-heading">BACKGROUND</h2>
+          <button id="background-close" class="track-list-close" type="button" aria-label="背景選択を閉じる">×</button>
+        </header>
+        <div id="background-list" class="background-list" role="group" aria-label="背景候補"></div>
+      </div>
+    </dialog>
   </section>
 `;
 
@@ -108,6 +132,10 @@ const trackList = requiredElement<HTMLDivElement>('#track-list');
 const favoritesModeButton = requiredElement<HTMLButtonElement>('#favorites-mode');
 const favoriteCount = requiredElement<HTMLSpanElement>('#favorite-count');
 const favoritesEmpty = requiredElement<HTMLParagraphElement>('#favorites-empty');
+const backgroundOpen = requiredElement<HTMLButtonElement>('#background-open');
+const backgroundClose = requiredElement<HTMLButtonElement>('#background-close');
+const backgroundDialog = requiredElement<HTMLDialogElement>('#background-dialog');
+const backgroundList = requiredElement<HTMLDivElement>('#background-list');
 
 let currentTrackIndex = 0;
 let activePlaylistMode: PlaylistMode = 'all';
@@ -123,6 +151,7 @@ const favoritesStorage = (() => {
   }
 })();
 let favoriteTrackIds = loadFavoriteTrackIds(favoritesStorage, catalogTrackIds);
+let activeBackgroundId = loadBackgroundId(favoritesStorage);
 
 function requiredElement<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
@@ -209,12 +238,49 @@ function renderTrackList() {
   updateTrackListState();
 }
 
+function setBackground(backgroundId: BackgroundId, persist = true) {
+  const background = backgrounds.find(({ id }) => id === backgroundId) ?? backgrounds[0];
+  activeBackgroundId = persist
+    ? saveBackgroundId(favoritesStorage, background.id)
+    : background.id;
+  document.documentElement.style.setProperty('--background-image', `url("${background.source}")`);
+
+  for (const button of backgroundList.querySelectorAll<HTMLButtonElement>('[data-background-id]')) {
+    const isSelected = button.dataset.backgroundId === activeBackgroundId;
+    button.classList.toggle('is-selected', isSelected);
+    button.setAttribute('aria-pressed', String(isSelected));
+  }
+}
+
+function renderBackgroundList() {
+  const fragment = document.createDocumentFragment();
+  for (const background of backgrounds) {
+    const button = document.createElement('button');
+    button.className = 'background-option';
+    button.type = 'button';
+    button.dataset.backgroundId = background.id;
+    button.setAttribute('aria-label', `${background.label}を背景に設定`);
+    button.innerHTML = `<img src="${background.source}" alt="" /><span>${background.label}</span><span class="background-check" aria-hidden="true">✓</span>`;
+    button.addEventListener('click', () => setBackground(background.id));
+    fragment.append(button);
+  }
+  backgroundList.replaceChildren(fragment);
+  setBackground(activeBackgroundId, false);
+}
+
 trackListOpen.addEventListener('click', () => {
   if (!trackListDialog.open) trackListDialog.showModal();
 });
 trackListClose.addEventListener('click', () => trackListDialog.close());
 trackListDialog.addEventListener('click', (event) => {
   if (event.target === trackListDialog) trackListDialog.close();
+});
+backgroundOpen.addEventListener('click', () => {
+  if (!backgroundDialog.open) backgroundDialog.showModal();
+});
+backgroundClose.addEventListener('click', () => backgroundDialog.close());
+backgroundDialog.addEventListener('click', (event) => {
+  if (event.target === backgroundDialog) backgroundDialog.close();
 });
 
 const reducedMotionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -562,6 +628,7 @@ async function connectToDiscord() {
 }
 
 renderTrackList();
+renderBackgroundList();
 updateTrack(0);
 recordAnonymousLaunch();
 void connectToDiscord();
