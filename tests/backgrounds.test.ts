@@ -43,7 +43,7 @@ test('background catalog contains the current default plus five unique selectabl
   }
 });
 
-test('background presentation keeps night effects off daytime scenes', () => {
+test('background presentation enables scene effects only for Moonlit Room', () => {
   assert.deepEqual(
     BACKGROUND_DEFINITIONS.map((background) => [
       background.id,
@@ -52,8 +52,8 @@ test('background presentation keeps night effects off daytime scenes', () => {
     ]),
     [
       ['background-0', 'night', true],
-      ['background-1', 'night', true],
-      ['background-2', 'night', true],
+      ['background-1', 'night', false],
+      ['background-2', 'night', false],
       ['background-3', 'day', false],
       ['background-4', 'day', false],
       ['background-5', 'day', false],
@@ -86,9 +86,9 @@ test('runtime backgrounds resolve a relative build base against the document URL
   );
 });
 
-test('load restores every valid background selection', () => {
+test('every launch starts from Moonlit Room regardless of a previous selection', () => {
   for (const background of BACKGROUND_DEFINITIONS) {
-    assert.equal(loadBackgroundId(createStorage(background.id)), background.id);
+    assert.equal(loadBackgroundId(createStorage(background.id)), DEFAULT_BACKGROUND_ID);
   }
 });
 
@@ -104,15 +104,15 @@ test('load falls back to the current default for empty, unknown, or inaccessible
   }), DEFAULT_BACKGROUND_ID);
 });
 
-test('save persists a valid selection and falls back safely for invalid IDs or storage errors', () => {
+test('manual background selection stays in the current session without persistent storage', () => {
   const storage = createStorage();
   for (const background of BACKGROUND_DEFINITIONS) {
     assert.equal(saveBackgroundId(storage, background.id), background.id);
-    assert.equal(storage.value(), background.id);
+    assert.equal(storage.value(), null);
   }
 
   assert.equal(saveBackgroundId(storage, 'unknown-background'), DEFAULT_BACKGROUND_ID);
-  assert.equal(storage.value(), DEFAULT_BACKGROUND_ID);
+  assert.equal(storage.value(), null);
 
   const blockedStorage = {
     getItem() {

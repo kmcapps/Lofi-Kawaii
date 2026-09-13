@@ -14,14 +14,14 @@ export const BACKGROUND_DEFINITIONS = [
     label: 'Sunset Room',
     fileName: 'images/backgrounds/01_lofi-background-01.png',
     tone: 'night',
-    allowsAmbientEffects: true,
+    allowsAmbientEffects: false,
   },
   {
     id: 'background-2',
     label: 'Starry Lake',
     fileName: 'images/backgrounds/02_lofi-background-10.png',
     tone: 'night',
-    allowsAmbientEffects: true,
+    allowsAmbientEffects: false,
   },
   {
     id: 'background-3',
@@ -64,19 +64,11 @@ function normalizeBackgroundId(backgroundId: string | null): BackgroundId {
 }
 
 export function loadBackgroundId(storage: StorageLike): BackgroundId {
-  try {
-    return normalizeBackgroundId(storage.getItem(BACKGROUND_STORAGE_KEY));
-  } catch {
-    return DEFAULT_BACKGROUND_ID;
-  }
+  void storage;
+  return DEFAULT_BACKGROUND_ID;
 }
 
 export function saveBackgroundId(storage: StorageLike, backgroundId: string): BackgroundId {
-  const normalized = normalizeBackgroundId(backgroundId);
-  try {
-    storage.setItem(BACKGROUND_STORAGE_KEY, normalized);
-  } catch {
-    // The current session remains usable when persistent storage is unavailable.
-  }
-  return normalized;
+  void storage;
+  return normalizeBackgroundId(backgroundId);
 }
