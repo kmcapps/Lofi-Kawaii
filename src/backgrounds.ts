@@ -37,10 +37,11 @@ export const BACKGROUND_DEFINITIONS = [
 export type BackgroundId = (typeof BACKGROUND_DEFINITIONS)[number]['id'];
 type StorageLike = Pick<Storage, 'getItem' | 'setItem'>;
 
-export function createBackgrounds(baseUrl: string) {
+export function createBackgrounds(baseUrl: string, documentUrl: string) {
+  const resolvedBaseUrl = new URL(baseUrl, documentUrl).href;
   return BACKGROUND_DEFINITIONS.map((background) => ({
     ...background,
-    source: `${baseUrl}${background.fileName}`,
+    source: `${resolvedBaseUrl}${background.fileName}`,
   }));
 }
 

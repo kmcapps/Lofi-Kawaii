@@ -44,10 +44,28 @@ test('background catalog contains the current default plus five unique selectabl
 });
 
 test('runtime backgrounds use the configured base URL without changing stable IDs', () => {
-  const backgrounds = createBackgrounds('/Lofi-Kawaii/');
-  assert.equal(backgrounds[0]?.source, '/Lofi-Kawaii/images/03_lofi-background.png');
-  assert.equal(backgrounds[5]?.source, '/Lofi-Kawaii/images/backgrounds/lofi-background-09.png');
+  const backgrounds = createBackgrounds('/Lofi-Kawaii/', 'https://kmcapps.github.io/');
+  assert.equal(
+    backgrounds[0]?.source,
+    'https://kmcapps.github.io/Lofi-Kawaii/images/03_lofi-background.png',
+  );
+  assert.equal(
+    backgrounds[5]?.source,
+    'https://kmcapps.github.io/Lofi-Kawaii/images/backgrounds/lofi-background-09.png',
+  );
   assert.equal(backgrounds[0]?.id, DEFAULT_BACKGROUND_ID);
+});
+
+test('runtime backgrounds resolve a relative build base against the document URL', () => {
+  const backgrounds = createBackgrounds('./', 'https://1542526202458415274.discordsays.com/');
+  assert.equal(
+    backgrounds[0]?.source,
+    'https://1542526202458415274.discordsays.com/images/03_lofi-background.png',
+  );
+  assert.equal(
+    backgrounds[5]?.source,
+    'https://1542526202458415274.discordsays.com/images/backgrounds/lofi-background-09.png',
+  );
 });
 
 test('load restores every valid background selection', () => {

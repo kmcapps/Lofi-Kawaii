@@ -26,7 +26,7 @@ import {
 
 const audioBaseUrl = `${import.meta.env.BASE_URL}audio/`;
 const tracks = createTracks(audioBaseUrl);
-const backgrounds = createBackgrounds(import.meta.env.BASE_URL);
+const backgrounds = createBackgrounds(import.meta.env.BASE_URL, window.location.href);
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('App root was not found.');
 
