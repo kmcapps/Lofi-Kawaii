@@ -10,10 +10,11 @@ const ANONYMOUS_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-
 const ADMIN_SECRET_PATTERN = /^[A-Za-z0-9._~+/-]+=*$/;
 
 const UPSERT_VISIT_SQL = `
-  INSERT INTO anonymous_users (id_hash, first_seen_date, last_seen_date, is_returning)
-  VALUES (?, ?, ?, 0)
+  INSERT INTO anonymous_users (id_hash, first_seen_date, last_seen_date, is_returning, visit_count)
+  VALUES (?, ?, ?, 0, 1)
   ON CONFLICT(id_hash) DO UPDATE SET
     last_seen_date = MAX(anonymous_users.last_seen_date, excluded.last_seen_date),
+    visit_count = anonymous_users.visit_count + 1,
     is_returning = CASE
       WHEN excluded.last_seen_date > anonymous_users.first_seen_date THEN 1
       ELSE anonymous_users.is_returning
@@ -35,6 +36,7 @@ const PURGE_EXPIRED_DAILY_TOTAL_SQL = 'DELETE FROM anonymous_daily_usage WHERE u
 const READ_AGGREGATE_STATS_SQL = `
   SELECT
     COUNT(*) AS total_unique,
+    COALESCE(SUM(CASE WHEN visit_count >= 2 THEN 1 ELSE 0 END), 0) AS repeat_users,
     COALESCE(SUM(is_returning), 0) AS returning_users,
     CASE
       WHEN COUNT(*) = 0 THEN 0
@@ -92,6 +94,7 @@ export type AnalyticsEnv = {
 
 type AggregateStatsRow = {
   total_unique: number;
+  repeat_users: number;
   returning_users: number;
   returning_rate_percent: number;
 };
@@ -215,6 +218,7 @@ function createAdminHtml(nonce: string) {
       </div>
       <section class="cards" aria-label="利用状況">
         <article class="card"><p class="label">ユニーク利用</p><p class="value" id="total-unique">—</p></article>
+        <article class="card"><p class="label">2回以上利用</p><p class="value" id="repeat-users">—</p></article>
         <article class="card"><p class="label">別日再訪</p><p class="value" id="returning-users">—</p></article>
         <article class="card"><p class="label">再訪率</p><p class="value" id="returning-rate">—</p></article>
         <article class="card"><p class="label">今日のユニーク利用</p><p class="value" id="today-unique">—</p></article>
@@ -238,6 +242,7 @@ function createAdminHtml(nonce: string) {
     </main>
     <script nonce="${nonce}">
       const totalUnique = document.querySelector('#total-unique');
+      const repeatUsers = document.querySelector('#repeat-users');
       const returningUsers = document.querySelector('#returning-users');
       const returningRate = document.querySelector('#returning-rate');
       const todayUnique = document.querySelector('#today-unique');
@@ -343,6 +348,7 @@ function createAdminHtml(nonce: string) {
           if (!response.ok) throw new Error('stats request failed');
           const stats = await response.json();
           totalUnique.textContent = String(stats.total_unique);
+          repeatUsers.textContent = String(stats.repeat_users);
           returningUsers.textContent = String(stats.returning_users);
           returningRate.textContent = String(stats.returning_rate_percent) + '%';
           const dailyPoints = stats.daily_unique.map((point, index) => ({
@@ -437,6 +443,7 @@ export async function handleAdminRequest(request: Request, env: AnalyticsEnv, no
     env.DB.prepare(READ_COUNTRY_STATS_SQL).bind(dates[0], dates.at(-1)).all<CountryStatsRow>(),
   ]);
   const totalUnique = Number(row?.total_unique ?? 0);
+  const repeatUsers = Number(row?.repeat_users ?? 0);
   const returningUsers = Number(row?.returning_users ?? 0);
   const returningRatePercent = Number(row?.returning_rate_percent ?? 0);
   const dailyByDate = new Map(dailyResult.results.map((item) => [item.date, Number(item.unique_users)]));
@@ -451,6 +458,7 @@ export async function handleAdminRequest(request: Request, env: AnalyticsEnv, no
   return Response.json(
     {
       total_unique: totalUnique,
+      repeat_users: repeatUsers,
       returning_users: returningUsers,
       returning_rate_percent: returningRatePercent,
       daily_unique: dailyUnique,

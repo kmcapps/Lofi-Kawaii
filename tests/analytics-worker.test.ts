@@ -19,6 +19,8 @@ function createDatabase() {
   sqlite.exec(migration);
   const dailyMigration = readFileSync(new URL('../worker/migrations/0002_create_anonymous_user_daily.sql', import.meta.url), 'utf8');
   sqlite.exec(dailyMigration);
+  const repeatUsersMigration = readFileSync(new URL('../worker/migrations/0003_add_anonymous_user_visit_count.sql', import.meta.url), 'utf8');
+  sqlite.exec(repeatUsersMigration);
 
   const queries: string[] = [];
   let runCount = 0;
@@ -139,6 +141,25 @@ test('daily migration creates the privacy-minimal deduplicated table, country in
   assert.doesNotMatch(String(totalTable.sql), /id_hash|country_code|timestamp|user_agent|ip/i);
 });
 
+test('repeat-user migration initializes a privacy-minimal visit counter from the safest known lower bound', () => {
+  const sqlite = new DatabaseSync(':memory:');
+  sqlite.exec(readFileSync(new URL('../worker/migrations/0001_create_anonymous_users.sql', import.meta.url), 'utf8'));
+  sqlite.prepare('INSERT INTO anonymous_users (id_hash, first_seen_date, last_seen_date, is_returning) VALUES (?, ?, ?, ?)')
+    .run('first-user', '2026-09-01', '2026-09-01', 0);
+  sqlite.prepare('INSERT INTO anonymous_users (id_hash, first_seen_date, last_seen_date, is_returning) VALUES (?, ?, ?, ?)')
+    .run('returning-user', '2026-09-01', '2026-09-02', 1);
+
+  sqlite.exec(readFileSync(new URL('../worker/migrations/0003_add_anonymous_user_visit_count.sql', import.meta.url), 'utf8'));
+
+  const rows = sqlite.prepare('SELECT id_hash, visit_count FROM anonymous_users ORDER BY id_hash').all();
+  assert.deepEqual(rows.map((row) => ({ id_hash: row.id_hash, visit_count: row.visit_count })), [
+    { id_hash: 'first-user', visit_count: 1 },
+    { id_hash: 'returning-user', visit_count: 2 },
+  ]);
+  const table = sqlite.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'anonymous_users'").get();
+  assert.match(String(table.sql), /visit_count INTEGER NOT NULL DEFAULT 1 CHECK \(visit_count >= 1\)/i);
+});
+
 test('same anonymous user and JST day is one daily user and keeps the first country', async () => {
   const database = createDatabase();
   const env = createEnv(database.d1);
@@ -194,6 +215,30 @@ test('daily total counts every accepted visit without adding individual visit hi
   ]);
 });
 
+test('repeat-user count includes each anonymous user with at least two accepted visits exactly once', async () => {
+  const database = createDatabase();
+  const env = createEnv(database.d1);
+  const now = new Date('2026-08-31T02:00:00Z');
+
+  await handleAnalyticsRequest(createRequest(FIRST_ID), env, now);
+  await handleAnalyticsRequest(createRequest(FIRST_ID), env, now);
+  await handleAnalyticsRequest(createRequest(FIRST_ID), env, now);
+  await handleAnalyticsRequest(createRequest(SECOND_ID), env, now);
+  await handleAnalyticsRequest(createRequest(SECOND_ID), env, now);
+  await handleAnalyticsRequest(createRequest(THIRD_ID), env, now);
+
+  const rows = database.sqlite.prepare('SELECT visit_count FROM anonymous_users ORDER BY id_hash').all();
+  assert.deepEqual(rows.map((row) => row.visit_count).sort((a, b) => Number(a) - Number(b)), [1, 2, 3]);
+
+  const response = await handleAdminRequest(
+    createAdminRequest('/admin/stats', 'GET', `Bearer ${TEST_ADMIN_SECRET}`),
+    env,
+    now,
+  );
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).repeat_users, 2);
+});
+
 test('country header is ignored and missing or invalid Cloudflare country becomes Unknown', async () => {
   const database = createDatabase();
   const env = createEnv(database.d1);
@@ -233,6 +278,7 @@ test('admin stats return the last 30 JST days with zeros and distinct country us
   assert.deepEqual(stats.daily_total.find((item) => item.date === '2026-08-31'), { date: '2026-08-31', total_visits: 2 });
   assert.deepEqual(stats.daily_total.find((item) => item.date === '2026-09-01'), { date: '2026-09-01', total_visits: 2 });
   assert.equal(stats.measurement_started_on, '2026-09-01');
+  assert.equal(stats.repeat_users, 2);
   assert.deepEqual(stats.country_unique, [
     { country_code: 'JP', unique_users: 1 },
     { country_code: 'SG', unique_users: 1 },
@@ -471,6 +517,11 @@ test('admin page is a public fixed shell that requests the secret without queryi
   assert.match(html, /表示/);
   assert.match(html, /最終更新/);
   assert.match(html, /id="daily-chart"/);
+  assert.match(html, /2回以上利用/);
+  assert.match(html, /id="repeat-users"/);
+  assert.match(html, /stats\.repeat_users/);
+  assert.ok(html.indexOf('id="total-unique"') < html.indexOf('id="repeat-users"'));
+  assert.ok(html.indexOf('id="repeat-users"') < html.indexOf('id="returning-users"'));
   assert.match(html, /今日のユニーク利用/);
   assert.match(html, /今日の総利用回数/);
   assert.match(html, /daily_total/);
@@ -502,8 +553,8 @@ test('matching Bearer secret returns aggregate-only zero state without D1 writes
   assert.equal(response.headers.get('Access-Control-Allow-Origin'), null);
   const zeroStats = await response.json();
   assert.deepEqual(
-    { total_unique: zeroStats.total_unique, returning_users: zeroStats.returning_users, returning_rate_percent: zeroStats.returning_rate_percent },
-    { total_unique: 0, returning_users: 0, returning_rate_percent: 0 },
+    { total_unique: zeroStats.total_unique, repeat_users: zeroStats.repeat_users, returning_users: zeroStats.returning_users, returning_rate_percent: zeroStats.returning_rate_percent },
+    { total_unique: 0, repeat_users: 0, returning_users: 0, returning_rate_percent: 0 },
   );
   assert.equal(zeroStats.daily_unique.length, 30);
   assert.equal(zeroStats.daily_total.length, 30);
@@ -534,8 +585,8 @@ test('matching Bearer secret returns the SQL-calculated rate from one aggregate 
   assert.equal(response.status, 200);
   const stats = await response.json();
   assert.deepEqual(
-    { total_unique: stats.total_unique, returning_users: stats.returning_users, returning_rate_percent: stats.returning_rate_percent },
-    { total_unique: 2, returning_users: 1, returning_rate_percent: 50 },
+    { total_unique: stats.total_unique, repeat_users: stats.repeat_users, returning_users: stats.returning_users, returning_rate_percent: stats.returning_rate_percent },
+    { total_unique: 2, repeat_users: 1, returning_users: 1, returning_rate_percent: 50 },
   );
   assert.equal(stats.daily_unique.length, 30);
   assert.equal(stats.daily_total.length, 30);

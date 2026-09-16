@@ -186,6 +186,13 @@
         than the overall unique-user total.
       </p>
       <p>
+        To show how many anonymous installations have opened the Activity at least twice, Lofi-Kawaii stores a cumulative
+        visit count with each pseudonymous identifier. Existing records are initialized from the safest known lower bound:
+        installations already observed on separate dates start at two, and all others start at one. Earlier same-day repeat
+        usage cannot be reconstructed. The administration screen displays only the aggregate number of installations with
+        two or more accepted visits, never an individual identifier or an individual visit history.
+      </p>
+      <p>
         Lofi-Kawaii does not add an opt-out control to the player interface. If you do not want future launches included
         in this anonymous measurement, do not launch the Activity or use browser or platform controls to block site
         storage for it, where such controls are available. Clearing the Activity's site data removes the locally stored
