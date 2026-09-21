@@ -45,7 +45,16 @@ app.innerHTML = `
     </div>
     <div class="glow glow-one"></div><div class="glow glow-two"></div>
     <div id="player-panel" class="player-panel">
-      <h1 id="track-title" class="drag-handle" title="ドラッグしてプレイヤーを移動"></h1>
+      <div class="track-heading">
+        <h1 id="track-title" class="drag-handle" title="ドラッグしてプレイヤーを移動"></h1>
+        <button id="current-favorite-toggle" class="current-favorite-toggle" type="button" aria-label="現在の曲をお気に入りに追加" aria-pressed="false" title="お気に入りに追加">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path class="current-favorite-heart" d="M12 20.25 4.7 13.4C1.05 10 3.15 4.25 7.65 4.25c1.75 0 3.35.95 4.35 2.35 1-1.4 2.6-2.35 4.35-2.35 4.5 0 6.6 5.75 2.95 9.15L12 20.25Z"></path>
+            <path class="current-favorite-plus" d="M18.25 8.5v5.5M15.5 11.25H21"></path>
+          </svg>
+        </button>
+        <p id="favorite-feedback" class="favorite-feedback" role="status" aria-live="polite" hidden></p>
+      </div>
       <div class="playlist-modes" role="group" aria-label="プレイリスト">
         <button class="playlist-mode is-active" type="button" data-playlist-mode="all" aria-pressed="true">ALL</button>
         <button class="playlist-mode" type="button" data-playlist-mode="chill" aria-pressed="false">CHILL</button>
@@ -114,6 +123,8 @@ app.innerHTML = `
 
 const playerPanel = requiredElement<HTMLDivElement>('#player-panel');
 const title = requiredElement<HTMLHeadingElement>('#track-title');
+const currentFavoriteToggle = requiredElement<HTMLButtonElement>('#current-favorite-toggle');
+const favoriteFeedback = requiredElement<HTMLParagraphElement>('#favorite-feedback');
 const resizeHandle = requiredElement<HTMLSpanElement>('#resize-handle');
 const playlistModeButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-playlist-mode]'));
 const previousButton = requiredElement<HTMLButtonElement>('#previous-button');
@@ -152,6 +163,9 @@ const favoritesStorage = (() => {
 })();
 let favoriteTrackIds = loadFavoriteTrackIds(favoritesStorage, catalogTrackIds);
 let activeBackgroundId = loadBackgroundId(favoritesStorage);
+let favoriteFeedbackTimer: number | undefined;
+let favoriteButtonBounceTimer: number | undefined;
+let favoriteModePulseTimer: number | undefined;
 
 function requiredElement<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
@@ -177,6 +191,12 @@ function updateTrackListState() {
   favoriteCount.textContent = String(favoriteTrackIds.length);
   favoritesEmpty.hidden = favoriteTrackIds.length !== 0;
   favoritesModeButton.disabled = favoriteTrackIds.length === 0;
+  const currentTrack = tracks[currentTrackIndex];
+  const isCurrentFavorite = favoriteTrackIds.includes(currentTrack.id);
+  currentFavoriteToggle.classList.toggle('is-favorite', isCurrentFavorite);
+  currentFavoriteToggle.setAttribute('aria-pressed', String(isCurrentFavorite));
+  currentFavoriteToggle.setAttribute('aria-label', `${currentTrack.title}をお気に入り${isCurrentFavorite ? 'から解除' : 'に追加'}`);
+  currentFavoriteToggle.title = isCurrentFavorite ? 'お気に入りから解除' : 'お気に入りに追加';
 
   for (const row of trackList.querySelectorAll<HTMLElement>('[data-track-id]')) {
     const trackId = row.dataset.trackId ?? '';
@@ -377,6 +397,50 @@ function positionPanelAtDefault() {
   clampPanelToViewport();
 }
 
+function showFavoriteFeedback(message: string, shouldBounce: boolean) {
+  window.clearTimeout(favoriteFeedbackTimer);
+  window.clearTimeout(favoriteButtonBounceTimer);
+  window.clearTimeout(favoriteModePulseTimer);
+  favoritesModeButton.style.removeProperty('transform');
+  favoritesModeButton.style.removeProperty('transition');
+
+  favoriteFeedback.textContent = message;
+  favoriteFeedback.hidden = false;
+  favoriteFeedback.classList.remove('is-visible');
+  void favoriteFeedback.offsetWidth;
+  favoriteFeedback.classList.add('is-visible');
+
+  currentFavoriteToggle.classList.remove('is-bouncing');
+  favoritesModeButton.classList.remove('is-bouncing');
+  if (shouldBounce) {
+    void currentFavoriteToggle.offsetWidth;
+    currentFavoriteToggle.classList.add('is-bouncing');
+    favoritesModeButton.classList.add('is-bouncing');
+    favoritesModeButton.style.transition = 'none';
+    favoritesModeButton.style.transform = 'scale(.96)';
+    void favoritesModeButton.offsetWidth;
+    window.requestAnimationFrame(() => {
+      favoritesModeButton.style.transition = 'transform .18s cubic-bezier(.34, 1.56, .64, 1)';
+      favoritesModeButton.style.transform = 'translateY(-1px) scale(1.08)';
+    });
+    favoriteModePulseTimer = window.setTimeout(() => {
+      favoritesModeButton.style.transition = 'transform .28s ease-out';
+      favoritesModeButton.style.transform = 'none';
+    }, 180);
+    favoriteButtonBounceTimer = window.setTimeout(() => {
+      currentFavoriteToggle.classList.remove('is-bouncing');
+      favoritesModeButton.classList.remove('is-bouncing');
+      favoritesModeButton.style.removeProperty('transform');
+      favoritesModeButton.style.removeProperty('transition');
+    }, 560);
+  }
+
+  favoriteFeedbackTimer = window.setTimeout(() => {
+    favoriteFeedback.classList.remove('is-visible');
+    favoriteFeedback.hidden = true;
+  }, 1250);
+}
+
 function setPanelScale(nextScale: number, anchor?: { left: number; top: number }) {
   panelScale = clamp(nextScale, MIN_PANEL_SCALE, MAX_PANEL_SCALE);
   applyPanelScale();
@@ -562,6 +626,20 @@ playButton.addEventListener('click', () => {
 previousButton.addEventListener('click', () => changeTrack(-1));
 
 nextButton.addEventListener('click', () => changeTrack(1));
+
+currentFavoriteToggle.addEventListener('click', () => {
+  const wasFavorite = favoriteTrackIds.includes(tracks[currentTrackIndex].id);
+  favoriteTrackIds = toggleFavoriteTrackId(favoriteTrackIds, tracks[currentTrackIndex].id, catalogTrackIds);
+  favoriteTrackIds = saveFavoriteTrackIds(favoritesStorage, favoriteTrackIds, catalogTrackIds);
+  if (favoriteTrackIds.length === 0 && activePlaylistMode === 'favorites') {
+    setActivePlaylistMode('all');
+  }
+  updateTrackListState();
+  showFavoriteFeedback(
+    wasFavorite ? 'Removed from Favorites' : 'Added to Favorites ♥',
+    !wasFavorite,
+  );
+});
 
 for (const button of playlistModeButtons) {
   button.addEventListener('click', () => {

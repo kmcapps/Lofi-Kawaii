@@ -55,4 +55,5 @@ test('ALL and JAPANESE seek thumbs keep their motifs without an opaque base fill
   assert.ok(japaneseTheme);
   assert.match(allTheme[1], /--seek-thumb:[\s\S]*transparent;/);
   assert.match(japaneseTheme[1], /--seek-thumb:[\s\S]*transparent;/);
+  assert.doesNotMatch(japaneseTheme[1], /circle at 50% 50%/);
 });
