@@ -530,6 +530,12 @@ test('admin page is a public fixed shell that requests the secret without queryi
   assert.match(html, /id="country-chart"/);
   assert.match(html, /Unknown/);
   assert.match(html, /svg \{[^}]*height: auto;/);
+  assert.match(html, /const countryBarRight = 500;/);
+  assert.match(html, /const countryValueX = 580;/);
+  assert.match(html, /\[0, Math\.ceil\(max \/ 2\), max\]\.filter\(/);
+  assert.match(html, /for \(const value of yAxisValues\)/);
+  assert.match(html, /label\.textContent = String\(value\)/);
+  assert.match(html, /class: 'chart-axis-label'/);
   assert.match(html, /const chartHeight = Math\.max\(220, 36 \+ countries\.length \* 30\)/);
   assert.match(html, /countryChart\.setAttribute\('viewBox', '0 0 600 ' \+ chartHeight\)/);
   assert.match(html, /countryChart\.setAttribute\('height', String\(chartHeight\)\)/);

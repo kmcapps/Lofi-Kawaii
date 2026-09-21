@@ -201,7 +201,7 @@ function createAdminHtml(nonce: string) {
       .chart-dot { fill: #f6f1ff; stroke: #b9c4ff; stroke-width: 2; }
       .chart-total-line { fill: none; stroke: #f4a7c4; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .chart-total-dot { fill: #fff3f8; stroke: #f4a7c4; stroke-width: 2; }
-      .chart-label { fill: #c5c8db; font-size: 11px; }
+      .chart-label, .chart-axis-label { fill: #c5c8db; font-size: 11px; }
       .chart-bar { fill: #b9c4ff; }
       @media (max-width: 540px) { .credentials { align-items: stretch; flex-direction: column; } .cards { grid-template-columns: 1fr; } }
     </style>
@@ -266,14 +266,20 @@ function createAdminHtml(nonce: string) {
         dailyChart.replaceChildren();
         const width = 600;
         const height = 220;
-        const left = 38;
+        const left = 44;
         const right = 12;
         const top = 14;
         const bottom = 28;
         const max = Math.max(1, ...points.flatMap((point) => [point.unique_users, point.total_visits]));
         const x = (index) => left + (index * (width - left - right)) / Math.max(1, points.length - 1);
         const y = (value) => height - bottom - (value * (height - top - bottom)) / max;
-        for (const value of [0, max]) dailyChart.append(svgElement('line', { x1: left, x2: width - right, y1: y(value), y2: y(value), class: 'chart-grid' }));
+        const yAxisValues = [0, Math.ceil(max / 2), max].filter((value, index, values) => index === 0 || value !== values[index - 1]);
+        for (const value of yAxisValues) {
+          dailyChart.append(svgElement('line', { x1: left, x2: width - right, y1: y(value), y2: y(value), class: 'chart-grid' }));
+          const label = svgElement('text', { x: left - 8, y: y(value) + 4, 'text-anchor': 'end', class: 'chart-axis-label' });
+          label.textContent = String(value);
+          dailyChart.append(label);
+        }
         const uniquePath = points.map((point, index) => (index ? 'L' : 'M') + ' ' + x(index) + ' ' + y(point.unique_users)).join(' ');
         const totalPath = points.map((point, index) => (index ? 'L' : 'M') + ' ' + x(index) + ' ' + y(point.total_visits)).join(' ');
         dailyChart.append(svgElement('path', { d: uniquePath, class: 'chart-line' }));
@@ -301,13 +307,16 @@ function createAdminHtml(nonce: string) {
           return;
         }
         const max = Math.max(1, ...countries.map((country) => country.unique_users));
+        const countryBarLeft = 70;
+        const countryBarRight = 500;
+        const countryValueX = 580;
         countries.forEach((country, index) => {
           const y = 18 + index * 30;
           const name = svgElement('text', { x: 8, y: y + 14, class: 'chart-label' });
           name.textContent = country.country_code === 'ZZ' ? 'Unknown' : country.country_code;
           countryChart.append(name);
-          countryChart.append(svgElement('rect', { x: 70, y, width: (country.unique_users / max) * 500, height: 18, rx: 4, class: 'chart-bar' }));
-          const value = svgElement('text', { x: 580, y: y + 14, 'text-anchor': 'end', class: 'chart-label' });
+          countryChart.append(svgElement('rect', { x: countryBarLeft, y, width: (country.unique_users / max) * (countryBarRight - countryBarLeft), height: 18, rx: 4, class: 'chart-bar' }));
+          const value = svgElement('text', { x: countryValueX, y: y + 14, 'text-anchor': 'end', class: 'chart-label' });
           value.textContent = String(country.unique_users);
           countryChart.append(value);
         });
