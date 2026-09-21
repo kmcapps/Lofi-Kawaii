@@ -374,13 +374,6 @@ function clampPanelToViewport() {
 function positionPanelAtDefault() {
   panelCenterX = window.innerWidth / 2;
   panelCenterY = window.innerHeight / 2;
-  playerPanel.style.left = `${panelCenterX}px`;
-  playerPanel.style.top = `${panelCenterY}px`;
-
-  const panelRect = playerPanel.getBoundingClientRect();
-  const handleRect = resizeHandle.getBoundingClientRect();
-  const visualBottom = Math.max(panelRect.bottom, handleRect.bottom);
-  panelCenterY += window.innerHeight - VIEWPORT_MARGIN - visualBottom;
   clampPanelToViewport();
 }
 
