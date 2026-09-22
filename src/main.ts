@@ -100,7 +100,7 @@ app.innerHTML = `
       <div class="track-list-card">
         <header class="track-list-header">
           <div>
-            <h2 id="track-list-heading">45 TRACKS</h2>
+            <h2 id="track-list-heading">${tracks.length} TRACKS</h2>
             <p>Select a track · ♡ Favorite</p>
           </div>
           <button id="track-list-close" class="track-list-close" type="button" aria-label="曲一覧を閉じる">×</button>
@@ -611,6 +611,7 @@ function changeTrack(offset: number) {
     currentTrackIndex,
     offset,
     activePlaylistMode,
+    tracks,
     favoriteTrackIndices(),
   );
   if (nextTrackIndex === null) return;
@@ -644,7 +645,7 @@ currentFavoriteToggle.addEventListener('click', () => {
 for (const button of playlistModeButtons) {
   button.addEventListener('click', () => {
     const nextMode = button.dataset.playlistMode as PlaylistMode;
-    const nextTrackIndex = firstTrackIndex(nextMode, favoriteTrackIndices());
+    const nextTrackIndex = firstTrackIndex(nextMode, tracks, favoriteTrackIndices());
     if (nextTrackIndex === null) return;
     setActivePlaylistMode(nextMode);
     updateTrack(nextTrackIndex);
@@ -670,6 +671,7 @@ audio.addEventListener('ended', () => {
     currentTrackIndex,
     1,
     activePlaylistMode,
+    tracks,
     favoriteTrackIndices(),
   );
   if (nextTrackIndex === null) {

@@ -1,22 +1,36 @@
-export const PLAYLIST_RANGES = {
-  all: { first: 0, last: 44 },
-  chill: { first: 0, last: 14 },
-  fantasy: { first: 15, last: 29 },
-  japanese: { first: 30, last: 44 },
-} as const;
+import type { TrackDefinition } from './tracks';
 
-type RangedPlaylistMode = keyof typeof PLAYLIST_RANGES;
-export type PlaylistMode = RangedPlaylistMode | 'favorites';
+export type PlaylistMode = 'all' | TrackDefinition['genre'] | 'favorites';
 
-export function firstTrackIndex(mode: PlaylistMode, favoriteIndices: readonly number[] = []) {
+export function playlistTrackIndices(
+  mode: Exclude<PlaylistMode, 'favorites'>,
+  catalog: readonly TrackDefinition[],
+): number[] {
+  const indices = catalog.flatMap((track, index) =>
+    mode === 'all' || track.genre === mode ? [index] : [],
+  );
+  if (mode !== 'all') {
+    indices.sort((left, right) =>
+      Number(catalog[left].fileName.slice(0, 3)) - Number(catalog[right].fileName.slice(0, 3)),
+    );
+  }
+  return indices;
+}
+
+export function firstTrackIndex(
+  mode: PlaylistMode,
+  catalog: readonly TrackDefinition[],
+  favoriteIndices: readonly number[] = [],
+) {
   if (mode === 'favorites') return favoriteIndices[0] ?? null;
-  return PLAYLIST_RANGES[mode].first;
+  return playlistTrackIndices(mode, catalog)[0] ?? null;
 }
 
 export function moveWithinPlaylist(
   currentIndex: number,
   offset: number,
   mode: PlaylistMode,
+  catalog: readonly TrackDefinition[],
   favoriteIndices: readonly number[] = [],
 ) {
   if (mode === 'favorites') {
@@ -48,7 +62,8 @@ export function moveWithinPlaylist(
     return currentIndex;
   }
 
-  const { first, last } = PLAYLIST_RANGES[mode];
-  const length = last - first + 1;
-  return first + ((currentIndex - first + offset) % length + length) % length;
+  const indices = playlistTrackIndices(mode, catalog);
+  if (indices.length === 0) return null;
+  const currentPosition = indices.indexOf(currentIndex);
+  return indices[((currentPosition + offset) % indices.length + indices.length) % indices.length] ?? indices[0];
 }

@@ -7,6 +7,7 @@ import {
   saveFavoriteTrackIds,
   toggleFavoriteTrackId,
 } from '../src/favorites.ts';
+import { TRACK_DEFINITIONS } from '../src/tracks.ts';
 
 const catalogIds = ['track-a', 'track-b', 'track-c', 'track-d'];
 
@@ -93,4 +94,15 @@ test('toggle adds or removes a known track while preserving catalog order', () =
     'track-a',
   ]);
   assert.deepEqual(toggleFavoriteTrackId(['track-a'], 'unknown', catalogIds), ['track-a']);
+});
+
+test('stored legacy favorites survive the 105-track catalog and new tracks can be toggled', () => {
+  const trackIds = TRACK_DEFINITIONS.map(({ id }) => id);
+  const storage = createStorage(JSON.stringify(['track-01', 'track-45']));
+  const restored = loadFavoriteTrackIds(storage, trackIds);
+  assert.deepEqual(restored, ['track-01', 'track-45']);
+
+  const added = toggleFavoriteTrackId(restored, 'track-105', trackIds);
+  assert.deepEqual(saveFavoriteTrackIds(storage, added, trackIds), ['track-01', 'track-45', 'track-105']);
+  assert.deepEqual(toggleFavoriteTrackId(added, 'track-105', trackIds), restored);
 });
