@@ -47,6 +47,20 @@ test('existing favorite IDs retain their original catalog metadata', () => {
   });
 });
 
+test('new tracks use their English MP3 filename titles without changing catalog metadata', () => {
+  const newTracks = TRACK_DEFINITIONS.filter(({ id }) => Number(id.slice(6)) >= 46);
+
+  assert.equal(newTracks.length, 60);
+  for (const track of newTracks) {
+    const expectedTitle = track.fileName
+      .replace(/^\d{3}_/, '')
+      .replace(/\.mp3$/, '')
+      .replaceAll('_', ' ');
+    assert.equal(track.title, expectedTitle, track.id);
+    assert.match(track.title, /^[\x20-\x7e]+$/, track.id);
+  }
+});
+
 test('runtime tracks use the configured audio base URL without changing catalog metadata', () => {
   const tracks = createTracks('/Lofi-Kawaii/audio/');
 
