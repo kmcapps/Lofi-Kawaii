@@ -511,6 +511,10 @@ test('admin page is a public fixed shell that requests the secret without queryi
   assert.match(html, new RegExp(`<script nonce="${nonce}">`));
   assert.match(html, new RegExp(`<style nonce="${nonce}">`));
   assert.match(html, /Lofi-Kawaii Analytics/);
+  assert.match(html, /class="app-shell"/);
+  assert.match(html, /class="sidebar"/);
+  assert.match(html, /ANALYTICS OVERVIEW/);
+  assert.match(html, /grid-template-columns: 220px minmax\(0, 1fr\)/);
   assert.match(html, /type="password"/);
   assert.match(html, /autocomplete="off"/);
   assert.match(html, /管理用Secret/);

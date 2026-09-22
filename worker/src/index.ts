@@ -172,50 +172,79 @@ function createAdminHtml(nonce: string) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lofi-Kawaii Analytics</title>
     <style nonce="${nonce}">
-      :root { color-scheme: dark; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
       * { box-sizing: border-box; }
-      body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; color: #f6f1ff; background: #0c1024; }
-      main { width: min(720px, 100%); }
-      h1 { margin: 0 0 8px; font-size: clamp(1.6rem, 5vw, 2.4rem); }
-      .description, .updated { color: #c5c8db; }
-      .credentials { display: flex; align-items: end; gap: 10px; margin: 24px 0; }
-      .field { display: grid; flex: 1; gap: 7px; color: #c5c8db; font-size: .9rem; }
-      input { width: 100%; border: 1px solid #4c557f; border-radius: 10px; padding: 10px 12px; color: inherit; background: #151a35; font: inherit; }
-      input:focus-visible { outline: 3px solid #b9c4ff; outline-offset: 3px; }
-      .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 24px 0; }
-      .card { padding: 18px; border: 1px solid #343b62; border-radius: 14px; background: #151a35; }
-      .label { margin: 0 0 8px; color: #c5c8db; font-size: .9rem; }
-      .value { margin: 0; font-size: clamp(1.7rem, 7vw, 2.5rem); font-variant-numeric: tabular-nums; }
-      button { border: 1px solid #7178a8; border-radius: 10px; padding: 10px 16px; color: inherit; background: #252b50; font: inherit; cursor: pointer; }
-      button:hover { background: #303760; }
-      button:focus-visible { outline: 3px solid #b9c4ff; outline-offset: 3px; }
+      body { margin: 0; min-width: 320px; min-height: 100vh; color: #f5f3ff; background: #090d1e; }
+      .app-shell { display: grid; min-height: 100vh; grid-template-columns: 220px minmax(0, 1fr); }
+      .sidebar { display: flex; flex-direction: column; gap: 36px; padding: 28px 20px; border-right: 1px solid #2a304e; background: #0d1228; }
+      .brand { margin: 0; color: #fff; font-size: 1rem; font-weight: 800; letter-spacing: .12em; }
+      .brand span { color: #b8a9ff; }
+      .sidebar-nav { display: grid; gap: 8px; }
+      .nav-item { display: block; padding: 10px 12px; border-radius: 9px; color: #8f97b8; font-size: .78rem; font-weight: 700; letter-spacing: .11em; text-decoration: none; }
+      .nav-item[aria-current="page"] { color: #f6f3ff; background: #252449; }
+      .sidebar-note { margin-top: auto; color: #757ea4; font-size: .78rem; line-height: 1.55; }
+      main { width: min(1440px, 100%); margin: 0 auto; padding: clamp(24px, 4vw, 56px); }
+      .topbar { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 28px; border-bottom: 1px solid #2a304e; }
+      h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 3vw, 2.4rem); letter-spacing: -.04em; }
+      .eyebrow { margin: 0 0 10px; color: #b8a9ff; font-size: .75rem; font-weight: 800; letter-spacing: .14em; }
+      .description, .updated { color: #a6adca; }
+      .description { max-width: 620px; margin: 0; line-height: 1.6; }
+      .credentials { display: flex; align-items: end; gap: 10px; width: min(380px, 100%); }
+      .field { display: grid; flex: 1; gap: 7px; color: #a6adca; font-size: .78rem; font-weight: 700; letter-spacing: .08em; }
+      input { width: 100%; border: 1px solid #3a4266; border-radius: 10px; padding: 11px 12px; color: inherit; background: #121832; font: inherit; }
+      input:focus-visible { outline: 3px solid #b8a9ff; outline-offset: 3px; }
+      .cards { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; margin: 28px 0; border: 1px solid #2e3658; border-radius: 14px; overflow: hidden; background: #2e3658; }
+      .card { min-width: 0; padding: 20px; background: #111731; }
+      .label { margin: 0 0 12px; color: #a6adca; font-size: .78rem; font-weight: 700; line-height: 1.35; }
+      .value { margin: 0; font-size: clamp(1.55rem, 3.1vw, 2.45rem); font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
+      button { border: 1px solid #7a6acb; border-radius: 10px; padding: 11px 16px; color: #fff; background: #6554bb; font: inherit; font-weight: 700; cursor: pointer; }
+      button:hover { background: #7869d0; }
+      button:focus-visible { outline: 3px solid #b8a9ff; outline-offset: 3px; }
       button:disabled { cursor: wait; opacity: .65; }
-      .status { min-height: 1.5em; margin-top: 14px; color: #c5c8db; }
-      .charts { display: grid; gap: 16px; margin-top: 24px; }
-      .chart-card { padding: 18px; border: 1px solid #343b62; border-radius: 14px; background: #151a35; overflow-x: auto; }
-      .chart-card h2 { margin: 0 0 12px; font-size: 1rem; }
-      .chart-card p { color: #c5c8db; font-size: .85rem; }
+      .status { min-height: 1.5em; margin: 16px 0 0; color: #c9c4e8; }
+      .charts { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, .9fr); gap: 18px; margin-top: 28px; }
+      .chart-card { padding: 22px; border: 1px solid #2e3658; border-radius: 14px; background: #111731; overflow-x: auto; }
+      .chart-card h2 { margin: 0 0 8px; font-size: 1rem; letter-spacing: -.015em; }
+      .chart-card p { margin: 0 0 16px; color: #a6adca; font-size: .82rem; line-height: 1.55; }
       svg { display: block; width: 100%; min-width: 440px; height: auto; }
-      .chart-grid { stroke: #343b62; stroke-width: 1; }
-      .chart-line { fill: none; stroke: #b9c4ff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-      .chart-dot { fill: #f6f1ff; stroke: #b9c4ff; stroke-width: 2; }
-      .chart-total-line { fill: none; stroke: #f4a7c4; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-      .chart-total-dot { fill: #fff3f8; stroke: #f4a7c4; stroke-width: 2; }
-      .chart-label, .chart-axis-label { fill: #c5c8db; font-size: 11px; }
-      .chart-bar { fill: #b9c4ff; }
-      @media (max-width: 540px) { .credentials { align-items: stretch; flex-direction: column; } .cards { grid-template-columns: 1fr; } }
+      .chart-grid { stroke: #343d63; stroke-width: 1; stroke-dasharray: 3 4; }
+      .chart-line { fill: none; stroke: #b8a9ff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .chart-dot { fill: #111731; stroke: #b8a9ff; stroke-width: 2; }
+      .chart-total-line { fill: none; stroke: #f2a2c5; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .chart-total-dot { fill: #111731; stroke: #f2a2c5; stroke-width: 2; }
+      .chart-label, .chart-axis-label { fill: #a6adca; font-size: 11px; }
+      .chart-bar { fill: #b8a9ff; }
+      .meta { display: flex; justify-content: space-between; gap: 18px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #2a304e; }
+      .updated { margin: 0; font-size: .82rem; }
+      .updated time { display: block; margin-top: 5px; color: #f5f3ff; font-weight: 700; }
+      @media (max-width: 1120px) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } .charts { grid-template-columns: 1fr; } }
+      @media (max-width: 760px) { .app-shell { grid-template-columns: 1fr; } .sidebar { display: none; } main { padding: 24px 18px 32px; } .topbar { align-items: stretch; flex-direction: column; } .credentials { width: 100%; } }
+      @media (max-width: 540px) { .credentials { align-items: stretch; flex-direction: column; } .cards { grid-template-columns: 1fr; } .meta { align-items: start; flex-direction: column; } .chart-card { padding: 18px; } }
     </style>
   </head>
   <body>
-    <main>
-      <h1>Lofi-Kawaii Analytics</h1>
-      <p class="description">保持中の匿名インストールを集計したローリング1年の概況です。</p>
-      <div class="credentials">
-        <label class="field" for="admin-secret">管理用Secret
-          <input type="password" id="admin-secret" autocomplete="off" spellcheck="false" />
-        </label>
-        <button type="button" id="refresh">表示</button>
-      </div>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Analytics navigation">
+        <p class="brand">LOFI <span>KAWAII</span></p>
+        <nav class="sidebar-nav" aria-label="管理画面">
+          <a class="nav-item" aria-current="page" href="#overview">ANALYTICS</a>
+        </nav>
+        <p class="sidebar-note">匿名利用状況を集計する、プライベートな管理画面です。</p>
+      </aside>
+      <main id="overview">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">ANALYTICS OVERVIEW</p>
+            <h1>Lofi-Kawaii Analytics</h1>
+            <p class="description">保持中の匿名インストールを集計したローリング1年の概況です。</p>
+          </div>
+          <div class="credentials">
+            <label class="field" for="admin-secret">管理用Secret
+              <input type="password" id="admin-secret" autocomplete="off" spellcheck="false" />
+            </label>
+            <button type="button" id="refresh">表示</button>
+          </div>
+        </header>
       <section class="cards" aria-label="利用状況">
         <article class="card"><p class="label">ユニーク利用</p><p class="value" id="total-unique">—</p></article>
         <article class="card"><p class="label">2回以上利用</p><p class="value" id="repeat-users">—</p></article>
@@ -236,10 +265,13 @@ function createAdminHtml(nonce: string) {
           <p>国別合計は期間中に国ごとに観測された匿名利用者の合計で、国をまたいだ利用により全体ユニーク数と一致しない場合があります。Unknownは国情報を取得できなかった利用です。</p>
         </article>
       </section>
-      <p class="updated">計測開始日: <time id="measurement-started-on">未取得</time></p>
-      <p class="updated">最終更新: <time id="updated-at">未取得</time></p>
+      <footer class="meta">
+        <p class="updated">計測開始日 <time id="measurement-started-on">未取得</time></p>
+        <p class="updated">最終更新 <time id="updated-at">未取得</time></p>
+      </footer>
       <p class="status" id="status" role="status" aria-live="polite"></p>
-    </main>
+      </main>
+    </div>
     <script nonce="${nonce}">
       const totalUnique = document.querySelector('#total-unique');
       const repeatUsers = document.querySelector('#repeat-users');
