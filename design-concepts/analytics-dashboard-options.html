@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lofi-Kawaii Analytics — dashboard directions</title>
+  <style>
+    :root { --canvas:#f7f7fb; --surface:#fff; --surface-2:#f0f1f8; --ink:#14162a; --muted:#6d728c; --line:#e1e4ef; --accent:#6050cf; --accent-2:#ed7ca4; --positive:#1a9c7c; --grid:#e7e8f1; --shadow:0 18px 44px rgba(30, 34, 74, .10); --radius:16px; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-width:1080px; background:var(--canvas); color:var(--ink); font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    button, input { font:inherit; }
+    .switcher { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; padding:14px max(28px, calc((100vw - 1340px)/2)); color:#fff; background:#17192d; border-bottom:1px solid rgba(255,255,255,.12); }
+    .switcher strong { font-size:14px; letter-spacing:.02em; }
+    .switches { display:flex; gap:8px; }
+    .switches button { padding:8px 12px; color:#c8cce2; background:transparent; border:1px solid #3a3d58; border-radius:9px; cursor:pointer; font-size:12px; }
+    .switches button.is-active { color:#fff; background:#6050cf; border-color:#6050cf; }
+    .shell { width:min(1340px, calc(100vw - 80px)); margin:0 auto; padding:42px 0 64px; }
+    .topbar { display:flex; justify-content:space-between; align-items:end; gap:28px; margin-bottom:32px; }
+    h1 { margin:0; font-size:34px; line-height:1.1; letter-spacing:-.045em; }
+    .lede { margin:8px 0 0; color:var(--muted); font-size:14px; }
+    .secret { display:flex; flex-direction:column; gap:7px; width:390px; }
+    .secret label, .meta-label { color:var(--muted); font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; }
+    .secret-row { display:flex; gap:8px; }
+    .secret input { width:100%; min-width:0; padding:11px 13px; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:10px; outline:none; }
+    .secret button { padding:0 17px; border:0; border-radius:10px; color:#fff; background:var(--accent); cursor:pointer; font-weight:700; }
+    .metrics { display:grid; grid-template-columns:repeat(6, 1fr); gap:12px; margin-bottom:18px; }
+    .metric { min-height:144px; padding:18px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); }
+    .metric .label { color:var(--muted); font-size:12px; font-weight:650; }
+    .metric .number { margin:13px 0 5px; font-size:29px; font-weight:750; letter-spacing:-.05em; }
+    .metric .change { color:var(--positive); font-size:12px; font-weight:700; }
+    .metric .spark { height:22px; width:100%; margin-top:12px; }
+    .grid { display:grid; grid-template-columns:1.65fr .9fr; gap:18px; }
+    .panel { padding:22px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); }
+    .panel.wide { grid-column:1 / -1; }
+    .panel-head { display:flex; justify-content:space-between; align-items:start; gap:16px; margin-bottom:20px; }
+    .panel h2 { margin:0; font-size:17px; letter-spacing:-.025em; }
+    .panel p { margin:5px 0 0; color:var(--muted); font-size:12px; }
+    .legend { display:flex; gap:14px; color:var(--muted); font-size:11px; white-space:nowrap; }
+    .dot { display:inline-block; width:8px; height:8px; margin-right:5px; border-radius:50%; background:var(--accent); }
+    .dot.pink { background:var(--accent-2); }
+    .chart { height:275px; width:100%; }
+    .country-list { display:grid; gap:14px; padding-top:7px; }
+    .country { display:grid; grid-template-columns:108px 1fr 56px; gap:12px; align-items:center; font-size:12px; }
+    .country span { color:var(--ink); font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.025em; }
+    .track { height:9px; overflow:hidden; background:var(--surface-2); border-radius:20px; }
+    .bar { height:100%; background:var(--accent); border-radius:20px; }
+    .country strong { text-align:right; font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.025em; }
+    .footer { display:flex; justify-content:space-between; padding:22px 2px 0; color:var(--muted); font-size:12px; }
+    .footer b { display:block; margin-top:4px; color:var(--ink); font-size:14px; }
+
+    /* A: midnight cockpit */
+    body[data-theme="cockpit"] { --canvas:#0b1021; --surface:#131a31; --surface-2:#202944; --ink:#eef0ff; --muted:#a5aecb; --line:#293451; --accent:#9e93ff; --accent-2:#ff91be; --positive:#8ee0bf; --grid:#2a3453; --shadow:none; }
+    body[data-theme="cockpit"] .metric { min-height:138px; }
+    body[data-theme="cockpit"] .panel { border-radius:10px; }
+    body[data-theme="cockpit"] .secret input { background:#10172d; color:#fff; }
+
+    /* B: white workspace */
+    body[data-theme="workspace"] { --canvas:#fbfbfd; --surface:#fff; --surface-2:#f2f3f7; --ink:#171a2e; --muted:#747991; --line:#e4e6ee; --accent:#5542c3; --accent-2:#ff8cae; --positive:#16a082; --grid:#eaecf2; --radius:10px; }
+    body[data-theme="workspace"] .shell { padding-top:48px; }
+    body[data-theme="workspace"] .metric { min-height:130px; }
+    body[data-theme="workspace"] .metric .number { font-size:31px; }
+    body[data-theme="workspace"] .panel { box-shadow:0 4px 18px rgba(21,24,45,.035); }
+    body[data-theme="workspace"] .grid { grid-template-columns:1.8fr .85fr; }
+
+    /* C: editorial command center */
+    body[data-theme="editorial"] { --canvas:#161a1a; --surface:#1c2221; --surface-2:#2a3331; --ink:#f2eee9; --muted:#a5ada7; --line:#3a4541; --accent:#a8c29b; --accent-2:#efb39a; --positive:#b5d39e; --grid:#35403c; --radius:7px; }
+    body[data-theme="editorial"] .shell { width:calc(100vw - 72px); max-width:none; }
+    body[data-theme="editorial"] .topbar { padding-bottom:25px; border-bottom:1px solid var(--line); }
+    body[data-theme="editorial"] .metrics { gap:0; border:1px solid var(--line); background:var(--surface); }
+    body[data-theme="editorial"] .metric { min-height:135px; border:0; border-radius:0; border-right:1px solid var(--line); }
+    body[data-theme="editorial"] .metric:last-child { border-right:0; }
+    body[data-theme="editorial"] .panel { padding:26px; box-shadow:none; }
+    body[data-theme="editorial"] .grid { grid-template-columns:1.1fr .9fr; }
+    body[data-theme="editorial"] .secret input { background:#181d1c; color:#fff; }
+    svg text { fill:var(--muted); font-family:inherit; font-size:10px; }
+    .axis { stroke:var(--grid); stroke-width:1; stroke-dasharray:2 5; }
+    .axis-solid { stroke:var(--grid); stroke-width:1; }
+    .line-a { fill:none; stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+    .line-b { fill:none; stroke:var(--accent-2); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+    .area-a { fill:var(--accent); opacity:.10; }
+    .area-b { fill:var(--accent-2); opacity:.08; }
+  </style>
+</head>
+<body data-theme="cockpit">
+  <header class="switcher">
+    <strong>静的デザインモック — 実データ・認証には接続しません</strong>
+    <nav class="switches" aria-label="デザイン候補">
+      <button class="is-active" data-theme="cockpit">A · Midnight cockpit</button>
+      <button data-theme="workspace">B · White workspace</button>
+      <button data-theme="editorial">C · Editorial center</button>
+    </nav>
+  </header>
+  <main class="shell">
+    <section class="topbar">
+      <div><h1>Lofi-Kawaii Analytics</h1><p class="lede">匿名インストールの利用状況を、見やすく静かに把握するための管理画面。</p></div>
+      <form class="secret"><label for="secret">管理用Secret</label><div class="secret-row"><input id="secret" type="password" value="••••••••••••" aria-label="管理用Secret" /><button type="button">表示</button></div></form>
+    </section>
+    <section class="metrics" aria-label="利用状況">
+      <article class="metric"><div class="label">ユニーク利用</div><div class="number">12,482</div><div class="change">↗ 12% · 過去30日</div></article>
+      <article class="metric"><div class="label">2回以上利用</div><div class="number">4,301</div><div class="change">↗ 8% · 過去30日</div></article>
+      <article class="metric"><div class="label">別日再訪</div><div class="number">3,912</div><div class="change">↗ 11% · 過去30日</div></article>
+      <article class="metric"><div class="label">再訪率</div><div class="number">31.3%</div><div class="change">↗ 2.4% · 過去30日</div></article>
+      <article class="metric"><div class="label">今日のユニーク利用</div><div class="number">892</div><div class="change">↗ 6% · 昨日比</div></article>
+      <article class="metric"><div class="label">今日の総利用回数</div><div class="number">1,420</div><div class="change">↗ 9% · 昨日比</div></article>
+    </section>
+    <section class="grid">
+      <article class="panel">
+        <header class="panel-head"><div><h2>日別利用状況（直近30日）</h2><p>日ごとのユニーク利用者と総利用回数</p></div><div class="legend"><span><i class="dot"></i>ユニーク利用者</span><span><i class="dot pink"></i>総利用回数</span></div></header>
+        <svg class="chart" viewBox="0 0 760 280" role="img" aria-label="日別利用状況のサンプルチャート">
+          <path class="axis" d="M50 30H740M50 80H740M50 130H740M50 180H740M50 230H740" /><path class="axis-solid" d="M50 230H740M50 30V230" />
+          <text x="15" y="234">0</text><text x="8" y="184">500</text><text x="2" y="134">1,000</text><text x="2" y="84">1,500</text><text x="2" y="34">2,000</text>
+          <path class="area-b" d="M50 180 L75 164 L100 152 L125 158 L150 144 L175 153 L200 141 L225 135 L250 146 L275 126 L300 133 L325 117 L350 110 L375 118 L400 102 L425 111 L450 86 L475 94 L500 70 L525 82 L550 65 L575 76 L600 61 L625 55 L650 39 L675 48 L700 28 L725 35 L725 230 L50 230Z" />
+          <path class="area-a" d="M50 210 L75 202 L100 196 L125 200 L150 188 L175 193 L200 184 L225 180 L250 187 L275 171 L300 178 L325 166 L350 159 L375 164 L400 151 L425 158 L450 137 L475 143 L500 124 L525 132 L550 116 L575 123 L600 108 L625 101 L650 86 L675 94 L700 72 L725 79 L725 230 L50 230Z" />
+          <path class="line-b" d="M50 180 L75 164 L100 152 L125 158 L150 144 L175 153 L200 141 L225 135 L250 146 L275 126 L300 133 L325 117 L350 110 L375 118 L400 102 L425 111 L450 86 L475 94 L500 70 L525 82 L550 65 L575 76 L600 61 L625 55 L650 39 L675 48 L700 28 L725 35" />
+          <path class="line-a" d="M50 210 L75 202 L100 196 L125 200 L150 188 L175 193 L200 184 L225 180 L250 187 L275 171 L300 178 L325 166 L350 159 L375 164 L400 151 L425 158 L450 137 L475 143 L500 124 L525 132 L550 116 L575 123 L600 108 L625 101 L650 86 L675 94 L700 72 L725 79" />
+          <text x="48" y="255">9/01</text><text x="185" y="255">9/07</text><text x="320" y="255">9/13</text><text x="455" y="255">9/19</text><text x="590" y="255">9/25</text><text x="705" y="255">9/30</text>
+        </svg>
+      </article>
+      <article class="panel"><header class="panel-head"><div><h2>国別ユニーク利用者</h2><p>直近30日 · 上位の国と地域</p></div></header><div class="country-list">
+        <div class="country"><span>JP</span><div class="track"><div class="bar" style="width:100%"></div></div><strong>4,820</strong></div>
+        <div class="country"><span>US</span><div class="track"><div class="bar" style="width:72%"></div></div><strong>3,472</strong></div>
+        <div class="country"><span>GB</span><div class="track"><div class="bar" style="width:52%"></div></div><strong>2,505</strong></div>
+        <div class="country"><span>CA</span><div class="track"><div class="bar" style="width:38%"></div></div><strong>1,825</strong></div>
+        <div class="country"><span>AU</span><div class="track"><div class="bar" style="width:26%"></div></div><strong>1,252</strong></div>
+        <div class="country"><span>Unknown</span><div class="track"><div class="bar" style="width:17%"></div></div><strong>816</strong></div>
+      </div></article>
+    </section>
+    <footer class="footer"><div><span class="meta-label">計測開始日</span><b>2026年1月12日</b></div><div><span class="meta-label">最終更新</span><b>2026年9月23日 14:32 JST</b></div></footer>
+  </main>
+  <script>
+    const buttons = document.querySelectorAll('[data-theme]');
+    buttons.forEach((button) => button.addEventListener('click', () => {
+      document.body.dataset.theme = button.dataset.theme;
+      buttons.forEach((item) => item.classList.toggle('is-active', item === button));
+    }));
+  </script>
+</body>
+</html>

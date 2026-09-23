@@ -511,10 +511,8 @@ test('admin page is a public fixed shell that requests the secret without queryi
   assert.match(html, new RegExp(`<script nonce="${nonce}">`));
   assert.match(html, new RegExp(`<style nonce="${nonce}">`));
   assert.match(html, /Lofi-Kawaii Analytics/);
-  assert.match(html, /class="app-shell"/);
-  assert.match(html, /class="sidebar"/);
   assert.match(html, /ANALYTICS OVERVIEW/);
-  assert.match(html, /grid-template-columns: 220px minmax\(0, 1fr\)/);
+  assert.doesNotMatch(html, /class="sidebar"|LOFI <span>KAWAII<\/span>|Analytics navigation/);
   assert.match(html, /type="password"/);
   assert.match(html, /autocomplete="off"/);
   assert.match(html, /管理用Secret/);
@@ -534,8 +532,13 @@ test('admin page is a public fixed shell that requests the secret without queryi
   assert.match(html, /id="country-chart"/);
   assert.match(html, /Unknown/);
   assert.match(html, /svg \{[^}]*height: auto;/);
-  assert.match(html, /const countryBarRight = 500;/);
-  assert.match(html, /const countryValueX = 580;/);
+  assert.match(html, /#country-chart \{ min-width: 0; \}/);
+  assert.match(html, /const countryBarRight = 480;/);
+  assert.match(html, /const countryValueX = 590;/);
+  assert.match(html, /\.country-name \{ fill: #f5f3ff; font-size: 16px; font-weight: 800;/);
+  assert.match(html, /\.country-value \{ fill: #f5f3ff; font-size: 16px; font-weight: 800;/);
+  assert.match(html, /class: 'country-name'/);
+  assert.match(html, /class: 'country-value'/);
   assert.match(html, /\[0, Math\.ceil\(max \/ 2\), max\]\.filter\(/);
   assert.match(html, /for \(const value of yAxisValues\)/);
   assert.match(html, /label\.textContent = String\(value\)/);

@@ -175,14 +175,6 @@ function createAdminHtml(nonce: string) {
       :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
       * { box-sizing: border-box; }
       body { margin: 0; min-width: 320px; min-height: 100vh; color: #f5f3ff; background: #090d1e; }
-      .app-shell { display: grid; min-height: 100vh; grid-template-columns: 220px minmax(0, 1fr); }
-      .sidebar { display: flex; flex-direction: column; gap: 36px; padding: 28px 20px; border-right: 1px solid #2a304e; background: #0d1228; }
-      .brand { margin: 0; color: #fff; font-size: 1rem; font-weight: 800; letter-spacing: .12em; }
-      .brand span { color: #b8a9ff; }
-      .sidebar-nav { display: grid; gap: 8px; }
-      .nav-item { display: block; padding: 10px 12px; border-radius: 9px; color: #8f97b8; font-size: .78rem; font-weight: 700; letter-spacing: .11em; text-decoration: none; }
-      .nav-item[aria-current="page"] { color: #f6f3ff; background: #252449; }
-      .sidebar-note { margin-top: auto; color: #757ea4; font-size: .78rem; line-height: 1.55; }
       main { width: min(1440px, 100%); margin: 0 auto; padding: clamp(24px, 4vw, 56px); }
       .topbar { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 28px; border-bottom: 1px solid #2a304e; }
       h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 3vw, 2.4rem); letter-spacing: -.04em; }
@@ -207,31 +199,26 @@ function createAdminHtml(nonce: string) {
       .chart-card h2 { margin: 0 0 8px; font-size: 1rem; letter-spacing: -.015em; }
       .chart-card p { margin: 0 0 16px; color: #a6adca; font-size: .82rem; line-height: 1.55; }
       svg { display: block; width: 100%; min-width: 440px; height: auto; }
+      #country-chart { min-width: 0; }
       .chart-grid { stroke: #343d63; stroke-width: 1; stroke-dasharray: 3 4; }
       .chart-line { fill: none; stroke: #b8a9ff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .chart-dot { fill: #111731; stroke: #b8a9ff; stroke-width: 2; }
       .chart-total-line { fill: none; stroke: #f2a2c5; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .chart-total-dot { fill: #111731; stroke: #f2a2c5; stroke-width: 2; }
       .chart-label, .chart-axis-label { fill: #a6adca; font-size: 11px; }
+      .country-name { fill: #f5f3ff; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.025em; }
+      .country-value { fill: #f5f3ff; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.025em; }
       .chart-bar { fill: #b8a9ff; }
       .meta { display: flex; justify-content: space-between; gap: 18px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #2a304e; }
       .updated { margin: 0; font-size: .82rem; }
       .updated time { display: block; margin-top: 5px; color: #f5f3ff; font-weight: 700; }
       @media (max-width: 1120px) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } .charts { grid-template-columns: 1fr; } }
-      @media (max-width: 760px) { .app-shell { grid-template-columns: 1fr; } .sidebar { display: none; } main { padding: 24px 18px 32px; } .topbar { align-items: stretch; flex-direction: column; } .credentials { width: 100%; } }
+      @media (max-width: 760px) { main { padding: 24px 18px 32px; } .topbar { align-items: stretch; flex-direction: column; } .credentials { width: 100%; } }
       @media (max-width: 540px) { .credentials { align-items: stretch; flex-direction: column; } .cards { grid-template-columns: 1fr; } .meta { align-items: start; flex-direction: column; } .chart-card { padding: 18px; } }
     </style>
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="sidebar" aria-label="Analytics navigation">
-        <p class="brand">LOFI <span>KAWAII</span></p>
-        <nav class="sidebar-nav" aria-label="管理画面">
-          <a class="nav-item" aria-current="page" href="#overview">ANALYTICS</a>
-        </nav>
-        <p class="sidebar-note">匿名利用状況を集計する、プライベートな管理画面です。</p>
-      </aside>
-      <main id="overview">
+    <main id="overview">
         <header class="topbar">
           <div>
             <p class="eyebrow">ANALYTICS OVERVIEW</p>
@@ -270,8 +257,7 @@ function createAdminHtml(nonce: string) {
         <p class="updated">最終更新 <time id="updated-at">未取得</time></p>
       </footer>
       <p class="status" id="status" role="status" aria-live="polite"></p>
-      </main>
-    </div>
+    </main>
     <script nonce="${nonce}">
       const totalUnique = document.querySelector('#total-unique');
       const repeatUsers = document.querySelector('#repeat-users');
@@ -340,15 +326,15 @@ function createAdminHtml(nonce: string) {
         }
         const max = Math.max(1, ...countries.map((country) => country.unique_users));
         const countryBarLeft = 70;
-        const countryBarRight = 500;
-        const countryValueX = 580;
+        const countryBarRight = 480;
+        const countryValueX = 590;
         countries.forEach((country, index) => {
           const y = 18 + index * 30;
-          const name = svgElement('text', { x: 8, y: y + 14, class: 'chart-label' });
+          const name = svgElement('text', { x: 8, y: y + 14, class: 'country-name' });
           name.textContent = country.country_code === 'ZZ' ? 'Unknown' : country.country_code;
           countryChart.append(name);
           countryChart.append(svgElement('rect', { x: countryBarLeft, y, width: (country.unique_users / max) * (countryBarRight - countryBarLeft), height: 18, rx: 4, class: 'chart-bar' }));
-          const value = svgElement('text', { x: countryValueX, y: y + 14, 'text-anchor': 'end', class: 'chart-label' });
+          const value = svgElement('text', { x: countryValueX, y: y + 14, 'text-anchor': 'end', class: 'country-value' });
           value.textContent = String(country.unique_users);
           countryChart.append(value);
         });
